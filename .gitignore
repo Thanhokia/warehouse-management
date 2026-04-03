@@ -1,0 +1,15 @@
+# Ignore IntelliJ IDEA project files
+.idea/
+backend/.idea/
+
+# Ignore node_modules
+node_modules/
+frontend/node_modules/
+
+# Ignore Maven target directory
+target/
+backend/target/
+
+# Ignore OS files
+.DS_Store
+Thumbs.db
