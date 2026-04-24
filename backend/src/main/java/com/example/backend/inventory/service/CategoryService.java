@@ -45,6 +45,7 @@ public class CategoryService {
 
     @Transactional
     public CategoryResponse create(CategoryRequest request) {
+        reclaimInactiveName(request.getName());
         if (categoryRepository.existsByName(request.getName())) {
             throw new IllegalArgumentException("Category name already exists: " + request.getName());
         }
@@ -62,6 +63,7 @@ public class CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
 
+        reclaimInactiveName(request.getName());
         if (!category.getName().equals(request.getName())
                 && categoryRepository.existsByName(request.getName())) {
             throw new IllegalArgumentException("Category name already exists: " + request.getName());
@@ -81,7 +83,17 @@ public class CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
         category.setIsActive(false);
+        category.setName(category.getName() + "_deleted_" + System.currentTimeMillis());
         categoryRepository.save(category);
+    }
+
+    private void reclaimInactiveName(String name) {
+        Category existing = categoryRepository.findByName(name).orElse(null);
+        if (existing != null && !existing.getIsActive()) {
+            existing.setName(existing.getName() + "_deleted_" + System.currentTimeMillis());
+            categoryRepository.save(existing);
+            categoryRepository.flush(); // Ensure uniqueness constraint is cleared immediately
+        }
     }
 
     private CategoryResponse toResponse(Category category) {

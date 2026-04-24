@@ -34,4 +34,3 @@ public class ProductRequest {
 
     private Boolean isActive = true;
 }
-

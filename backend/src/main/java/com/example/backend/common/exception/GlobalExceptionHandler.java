@@ -1,6 +1,6 @@
 package com.example.backend.common.exception;
 
-import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,47 +16,46 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ResponseEntity<Map<String, Object>> handleResourceNotFound(ResourceNotFoundException exception) {
-        return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                .body(buildResponse(HttpStatus.NOT_FOUND, exception.getMessage(), null));
+        return ResponseEntity.status(404)
+                .body(buildResponse(404, exception.getMessage(), null));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidation(MethodArgumentNotValidException exception) {
         Map<String, String> errors = new HashMap<>();
-
         for (FieldError fieldError : exception.getBindingResult().getFieldErrors()) {
             errors.put(fieldError.getField(), fieldError.getDefaultMessage());
         }
-
-        return ResponseEntity.badRequest()
-                .body(buildResponse(HttpStatus.BAD_REQUEST, "Validation failed", errors));
+        return ResponseEntity.status(400)
+                .body(buildResponse(400, "Validation failed", errors));
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalArgument(IllegalArgumentException exception) {
-        return ResponseEntity.status(HttpStatus.CONFLICT)
-                .body(buildResponse(HttpStatus.CONFLICT, exception.getMessage(), null));
+        // 409 Conflict — dùng khi vi phạm unique constraint (duplicate code, name...)
+        return ResponseEntity.status(409)
+                .body(buildResponse(409, exception.getMessage(), null));
     }
 
     @ExceptionHandler(IllegalStateException.class)
     public ResponseEntity<Map<String, Object>> handleIllegalState(IllegalStateException exception) {
-        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY)
-                .body(buildResponse(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage(), null));
+        // 422 Unprocessable Entity — dùng khi logic nghiệp vụ bị vi phạm (tồn kho thiếu, đơn đã hoàn thành...)
+        return ResponseEntity.status(HttpStatusCode.valueOf(422))
+                .body(buildResponse(422, exception.getMessage(), null));
     }
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<Map<String, Object>> handleGeneral(Exception exception) {
-        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(buildResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Internal server error: " + exception.getMessage(), null));
+        return ResponseEntity.status(500)
+                .body(buildResponse(500, "Internal server error: " + exception.getMessage(), null));
     }
 
-    private Map<String, Object> buildResponse(HttpStatus status, String message, Object errors) {
+    private Map<String, Object> buildResponse(int status, String message, Object errors) {
         Map<String, Object> response = new HashMap<>();
         response.put("timestamp", LocalDateTime.now());
-        response.put("status", status.value());
+        response.put("status", status);
         response.put("message", message);
         response.put("errors", errors);
         return response;
     }
 }
-

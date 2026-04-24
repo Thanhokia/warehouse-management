@@ -1,0 +1,29 @@
+package com.example.backend.inventory.controller;
+
+import com.example.backend.common.response.ApiResponse;
+import com.example.backend.inventory.dto.response.ActivityLogResponse;
+import com.example.backend.inventory.service.ActivityLogService;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.List;
+
+@Tag(name = "Activity Log")
+@RestController
+@RequestMapping("/api/activities")
+@RequiredArgsConstructor
+@PreAuthorize("hasAnyRole('ADMIN', 'MANAGER')")
+public class ActivityLogController {
+
+    private final ActivityLogService activityLogService;
+
+    @GetMapping
+    public ResponseEntity<ApiResponse<List<ActivityLogResponse>>> getRecentActivities() {
+        return ResponseEntity.ok(ApiResponse.ok("Activities retrieved successfully", activityLogService.getRecentActivities()));
+    }
+}

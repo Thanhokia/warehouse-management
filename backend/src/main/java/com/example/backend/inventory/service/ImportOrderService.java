@@ -25,6 +25,7 @@ public class ImportOrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final StockItemRepository stockItemRepository;
+    private final ActivityLogService activityLogService;
 
     public List<ImportOrderResponse> getAll() {
         return importOrderRepository.findAll().stream()
@@ -94,7 +95,9 @@ public class ImportOrderService {
         }
         order.setTotalAmount(total);
 
-        return toResponse(importOrderRepository.save(order));
+        order = importOrderRepository.save(order);
+        activityLogService.logAction("đã tạo", "Thông tin", "phiếu nhập kho: " + order.getOrderCode());
+        return toResponse(order);
     }
 
     @Transactional
@@ -108,6 +111,8 @@ public class ImportOrderService {
         if (newStatus == OrderStatus.COMPLETED && currentStatus != OrderStatus.COMPLETED) {
             updateStockOnComplete(order);
             order.setImportDate(LocalDateTime.now());
+            BigDecimal totalQty = order.getDetails().stream().map(ImportOrderDetail::getQuantity).reduce(BigDecimal.ZERO, BigDecimal::add);
+            activityLogService.logAction("đã nhập", "Thành công", totalQty + " sản phẩm vào kho " + order.getWarehouse().getName());
         }
 
         // Nếu đảo từ COMPLETED sang trạng thái khác -> trừ lại tồn kho

@@ -21,6 +21,7 @@ public class ProductService {
 
     private final ProductRepository productRepository;
     private final CategoryRepository categoryRepository;
+    private final ActivityLogService activityLogService;
 
     public List<ProductResponse> getAll() {
         return productRepository.findAll().stream()
@@ -76,7 +77,9 @@ public class ProductService {
                 .isActive(request.getIsActive() != null ? request.getIsActive() : true)
                 .category(category)
                 .build();
-        return toResponse(productRepository.save(product));
+        product = productRepository.save(product);
+        activityLogService.logAction("đã tạo", "Thành công", "sản phẩm mới: " + product.getName());
+        return toResponse(product);
     }
 
     @Transactional
@@ -102,7 +105,9 @@ public class ProductService {
         if (request.getIsActive() != null) {
             product.setIsActive(request.getIsActive());
         }
-        return toResponse(productRepository.save(product));
+        product = productRepository.save(product);
+        activityLogService.logAction("đã cập nhật", "Thông tin", "thông tin sản phẩm: " + product.getName());
+        return toResponse(product);
     }
 
     @Transactional
@@ -111,6 +116,7 @@ public class ProductService {
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + id));
         product.setIsActive(false);
         productRepository.save(product);
+        activityLogService.logAction("đã xóa", "Cảnh báo", "sản phẩm: " + product.getName());
     }
 
     private ProductResponse toResponse(Product product) {

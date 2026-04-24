@@ -20,6 +20,7 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final ActivityLogService activityLogService;
 
     public List<UserResponse> getAll() {
         return userRepository.findAll().stream()
@@ -41,6 +42,9 @@ public class UserService {
 
     @Transactional
     public UserResponse create(UserRequest request) {
+        if (request.getPassword() == null || request.getPassword().length() < 6) {
+            throw new IllegalArgumentException("Password must be at least 6 characters");
+        }
         if (userRepository.existsByUsername(request.getUsername())) {
             throw new IllegalArgumentException("Username already exists: " + request.getUsername());
         }
@@ -57,7 +61,9 @@ public class UserService {
                 .isActive(request.getIsActive() != null ? request.getIsActive() : true)
                 .build();
 
-        return toResponse(userRepository.save(user));
+        user = userRepository.save(user);
+        activityLogService.logAction("đã tạo", "Thành công", "tài khoản người dùng mới: " + user.getUsername());
+        return toResponse(user);
     }
 
     @Transactional
@@ -94,6 +100,7 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + id));
         user.setIsActive(false);
         userRepository.save(user);
+        activityLogService.logAction("đã xóa", "Cảnh báo", "tài khoản người dùng: " + user.getUsername());
     }
 
     private UserResponse toResponse(User user) {

@@ -25,6 +25,7 @@ public class ExportOrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final StockItemRepository stockItemRepository;
+    private final ActivityLogService activityLogService;
 
     public List<ExportOrderResponse> getAll() {
         return exportOrderRepository.findAll().stream()
@@ -95,7 +96,9 @@ public class ExportOrderService {
         }
         order.setTotalAmount(total);
 
-        return toResponse(exportOrderRepository.save(order));
+        order = exportOrderRepository.save(order);
+        activityLogService.logAction("đã tạo", "Thông tin", "phiếu xuất kho: " + order.getOrderCode());
+        return toResponse(order);
     }
 
     @Transactional
@@ -109,6 +112,8 @@ public class ExportOrderService {
         if (newStatus == OrderStatus.COMPLETED && currentStatus != OrderStatus.COMPLETED) {
             deductStockOnComplete(order);
             order.setExportDate(LocalDateTime.now());
+            BigDecimal totalQty = order.getDetails().stream().map(ExportOrderDetail::getQuantity).reduce(BigDecimal.ZERO, BigDecimal::add);
+            activityLogService.logAction("đã xuất", "Thành công", totalQty + " sản phẩm từ kho " + order.getWarehouse().getName());
         }
 
         // Nếu đảo từ COMPLETED sang trạng thái khác -> cộng lại tồn kho
