@@ -75,7 +75,7 @@ export default function Dashboard() {
             <ArrowDownToLine size={24} />
           </div>
           <div>
-            <p className="text-gray-500 text-sm font-medium">Nhập Trong Tháng</p>
+            <p className="text-gray-500 text-sm font-medium">Nhập 30 Ngày Qua</p>
             <p className="text-2xl font-bold text-gray-800">
                {isLoading ? <Loader2 className="animate-spin" size={24} /> : stats.importsThisMonth}
             </p>
@@ -87,7 +87,7 @@ export default function Dashboard() {
             <ArrowUpFromLine size={24} />
           </div>
           <div>
-            <p className="text-gray-500 text-sm font-medium">Xuất Trong Tháng</p>
+            <p className="text-gray-500 text-sm font-medium">Xuất 30 Ngày Qua</p>
             <p className="text-2xl font-bold text-gray-800">
                {isLoading ? <Loader2 className="animate-spin" size={24} /> : stats.exportsThisMonth}
             </p>

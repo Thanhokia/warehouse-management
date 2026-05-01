@@ -17,20 +17,20 @@ const dashboardService = {
       const imports = importsRes?.data || (Array.isArray(importsRes) ? importsRes : []);
       const exports = exportsRes?.data || (Array.isArray(exportsRes) ? exportsRes : []);
 
-      // Lọc các phiếu nhập/xuất trong tháng hiện tại
-      const currentMonth = new Date().getMonth();
-      const currentYear = new Date().getFullYear();
+      // Lọc các phiếu nhập/xuất trong 30 ngày qua
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
       const importsThisMonth = imports.filter(i => {
         if (i.status !== 'COMPLETED') return false;
         const d = new Date(i.importDate || i.createdAt);
-        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        return d >= thirtyDaysAgo;
       }).length;
 
       const exportsThisMonth = exports.filter(e => {
         if (e.status !== 'COMPLETED') return false;
         const d = new Date(e.exportDate || e.createdAt);
-        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+        return d >= thirtyDaysAgo;
       }).length;
 
       return {
