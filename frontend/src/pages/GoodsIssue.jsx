@@ -20,7 +20,7 @@ export default function GoodsIssue() {
           productService.getAll(),
           warehouseService.getAll()
         ]);
-        
+
         if (prodRes && prodRes.data) setProducts(prodRes.data);
         else if (Array.isArray(prodRes)) setProducts(prodRes);
 
@@ -36,12 +36,12 @@ export default function GoodsIssue() {
   const getUserRole = () => {
     const userStr = sessionStorage.getItem('user');
     if (userStr) {
-      try { return JSON.parse(userStr).role; } catch (e) {}
+      try { return JSON.parse(userStr).role; } catch (e) { }
     }
     return 'STAFF';
   };
   const currentUserRole = getUserRole();
-  
+
   // Header form
   const [issueData, setIssueData] = useState({
     issueNo: `PX${Date.now().toString().slice(-6)}`,
@@ -63,22 +63,22 @@ export default function GoodsIssue() {
       try {
         const res = await warehouseService.getStock(issueData.warehouseId);
         const stockList = Array.isArray(res) ? res : (res?.data || []);
-        
+
         const stockMap = {};
         stockList.forEach(s => {
-           stockMap[s.productId] = s.quantity;
+          stockMap[s.productId] = s.quantity;
         });
         setWarehouseStock(stockMap);
-        
+
         setItems(prev => prev.map(item => {
-           if (item.productId) {
-             const newStock = stockMap[item.productId] || 0;
-             return { ...item, currentStock: newStock };
-           }
-           return item;
+          if (item.productId) {
+            const newStock = stockMap[item.productId] || 0;
+            return { ...item, currentStock: newStock };
+          }
+          return item;
         }));
       } catch (err) {
-         console.error(err);
+        console.error(err);
       }
     };
     fetchStock();
@@ -101,14 +101,14 @@ export default function GoodsIssue() {
     setItems(items.map(item => {
       if (item.id === id) {
         let updatedItem = { ...item, [field]: value };
-        
+
         // Auto update unit and currentStock when product changes
         if (field === 'productId') {
           const product = products.find(p => p.id === Number(value));
           if (product) {
             updatedItem.unit = product.unit;
             updatedItem.currentStock = issueData.warehouseId ? (warehouseStock[product.id] || 0) : null;
-            
+
             // Auto clear quantity if the new selected product has 0 stock
             if (product.stock === 0) {
               updatedItem.quantity = '';
@@ -148,7 +148,7 @@ export default function GoodsIssue() {
       setError('Vui lòng nhập Lý do xuất kho.');
       return false;
     }
-    
+
     let hasValidItem = false;
     for (let i = 0; i < items.length; i++) {
       const item = items[i];
@@ -156,7 +156,7 @@ export default function GoodsIssue() {
         setError(`Dòng ${i + 1}: Vui lòng chọn sản phẩm.`);
         return false;
       }
-      
+
       const qty = Number(item.quantity);
       if (!qty || qty <= 0) {
         setError(`Dòng ${i + 1}: Số lượng xuất phải lớn hơn 0.`);
@@ -167,7 +167,7 @@ export default function GoodsIssue() {
         setError(`Dòng ${i + 1}: Vượt quá tồn kho! (Yêu cầu: ${qty}, Tồn kho: ${item.currentStock}).`);
         return false;
       }
-      
+
       hasValidItem = true;
     }
 
@@ -194,12 +194,15 @@ export default function GoodsIssue() {
       recipientName: issueData.recipient,
       recipientDepartment: '',
       note: issueData.reason,
-      details: items.map(item => ({
-        productId: Number(item.productId),
-        quantity: Number(item.quantity),
-        unitPrice: 0,
-        note: ''
-      }))
+      details: items.map(item => {
+        const product = products.find(p => p.id === Number(item.productId));
+        return {
+          productId: Number(item.productId),
+          quantity: Number(item.quantity),
+          unitPrice: product && product.price ? Number(product.price) : 0,
+          note: ''
+        };
+      })
     };
   };
 
@@ -218,11 +221,11 @@ export default function GoodsIssue() {
   };
 
   const handleApprove = async () => {
-    if (currentUserRole !== 'MANAGER' && currentUserRole !== 'ADMIN') {
-      toast.error('Lỗi: Chỉ quản lý/admin mới có quyền DUYỆT phiếu xuất kho!');
+    if (currentUserRole !== 'ADMIN') {
+      toast.error('Lỗi: Chỉ quản lý có quyền DUYỆT phiếu xuất kho!');
       return;
     }
-    
+
     if (!validateForm()) return;
     const loadingToast = toast.loading('Đang xử lý duyệt phiếu xuất...');
     try {
@@ -246,14 +249,14 @@ export default function GoodsIssue() {
           <p className="text-gray-500 text-sm mt-1">Xuất hàng hóa khỏi kho trung tâm</p>
         </div>
         <div className="flex gap-3">
-          <button 
+          <button
             onClick={() => navigate('/transactions')}
             className="bg-gray-100 text-gray-600 border border-gray-200 px-4 py-2 rounded shadow-sm hover:bg-gray-200 transition flex items-center gap-2 font-medium"
           >
             <ArrowLeft size={18} />
             Hủy / Trở về
           </button>
-          <button 
+          <button
             onClick={handleSave}
             disabled={status === 'APPROVED'}
             className="bg-white border border-primary text-primary px-4 py-2 rounded shadow hover:bg-gray-50 transition flex items-center gap-2 disabled:opacity-50"
@@ -261,7 +264,7 @@ export default function GoodsIssue() {
             <Save size={20} />
             Lưu Tạm
           </button>
-          <button 
+          <button
             onClick={handleApprove}
             disabled={status === 'APPROVED'}
             className="bg-danger text-white px-4 py-2 rounded shadow hover:bg-red-600 transition flex items-center gap-2 disabled:opacity-50"
@@ -288,8 +291,8 @@ export default function GoodsIssue() {
               <FileText size={16} className="text-gray-400" />
               Số phiếu
             </label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               name="issueNo"
               value={issueData.issueNo}
               disabled
@@ -301,8 +304,8 @@ export default function GoodsIssue() {
               <Calendar size={16} className="text-gray-400" />
               Ngày xuất
             </label>
-            <input 
-              type="date" 
+            <input
+              type="date"
               name="date"
               value={issueData.date}
               onChange={handleHeaderChange}
@@ -315,8 +318,8 @@ export default function GoodsIssue() {
               <User size={16} className="text-gray-400" />
               Người thực hiện
             </label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               name="personInCharge"
               value={issueData.personInCharge}
               onChange={handleHeaderChange}
@@ -329,8 +332,8 @@ export default function GoodsIssue() {
               <PackageMinus size={16} className="text-gray-400" />
               Người nhận / Bộ phận <span className="text-red-500">*</span>
             </label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               name="recipient"
               value={issueData.recipient}
               onChange={handleHeaderChange}
@@ -362,7 +365,7 @@ export default function GoodsIssue() {
               <Type size={16} className="text-gray-400" />
               Lý do xuất kho <span className="text-red-500">*</span>
             </label>
-            <textarea 
+            <textarea
               name="reason"
               value={issueData.reason}
               onChange={handleHeaderChange}
@@ -378,7 +381,7 @@ export default function GoodsIssue() {
       {/* Dynamic Items Table */}
       <div className="bg-surface rounded-lg shadow p-5">
         <h2 className="text-lg font-medium text-primary mb-4 border-b pb-2">Hàng hóa xuất</h2>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
@@ -416,40 +419,40 @@ export default function GoodsIssue() {
                       </select>
                     </td>
                     <td className="py-3 px-2 text-center">
-                       <span className={`inline-block px-3 py-1 font-semibold rounded text-sm ${item.currentStock === 0 ? 'bg-red-100 text-red-700' : item.currentStock <= 10 ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700'}`}>
-                         {item.currentStock !== null ? item.currentStock : '-'}
-                       </span>
+                      <span className={`inline-block px-3 py-1 font-semibold rounded text-sm ${item.currentStock === 0 ? 'bg-red-100 text-red-700' : item.currentStock <= 10 ? 'bg-orange-100 text-orange-700' : 'bg-gray-100 text-gray-700'}`}>
+                        {item.currentStock !== null ? item.currentStock : '-'}
+                      </span>
                     </td>
                     <td className="py-3 px-2">
-                       <input 
-                          type="text" 
-                          value={item.unit}
-                          disabled 
-                          className="w-full bg-gray-50 border-none text-gray-500 rounded px-2 py-2 text-center"
-                       />
+                      <input
+                        type="text"
+                        value={item.unit}
+                        disabled
+                        className="w-full bg-gray-50 border-none text-gray-500 rounded px-2 py-2 text-center"
+                      />
                     </td>
                     <td className="py-3 px-2 text-right">
-                       <input 
-                          type="number"
-                          min="1"
-                          max={item.currentStock !== null ? item.currentStock : undefined}
-                          value={item.quantity}
-                          onChange={(e) => handleItemChange(item.id, 'quantity', e.target.value)}
-                          disabled={status === 'APPROVED' || item.currentStock === 0 || item.currentStock === null}
-                          className={`w-full border rounded px-2 py-2 text-right focus:ring-2 focus:outline-none ${showWarning ? 'border-red-500 text-red-600 focus:ring-red-500 bg-white' : 'focus:ring-orange-400'}`}
-                          placeholder="0"
-                       />
-                       {showWarning && (
-                         <div className="text-red-500 text-xs mt-1 text-right">Vượt tồn kho!</div>
-                       )}
+                      <input
+                        type="number"
+                        min="1"
+                        max={item.currentStock !== null ? item.currentStock : undefined}
+                        value={item.quantity}
+                        onChange={(e) => handleItemChange(item.id, 'quantity', e.target.value)}
+                        disabled={status === 'APPROVED' || item.currentStock === 0 || item.currentStock === null}
+                        className={`w-full border rounded px-2 py-2 text-right focus:ring-2 focus:outline-none ${showWarning ? 'border-red-500 text-red-600 focus:ring-red-500 bg-white' : 'focus:ring-orange-400'}`}
+                        placeholder="0"
+                      />
+                      {showWarning && (
+                        <div className="text-red-500 text-xs mt-1 text-right">Vượt tồn kho!</div>
+                      )}
                     </td>
                     <td className="py-3 px-2 text-center">
-                      <button 
-                         onClick={() => removeItemRow(item.id)}
-                         disabled={items.length === 1 || status === 'APPROVED'}
-                         className="text-red-500 hover:text-red-700 disabled:opacity-30 disabled:cursor-not-allowed mx-auto"
+                      <button
+                        onClick={() => removeItemRow(item.id)}
+                        disabled={items.length === 1 || status === 'APPROVED'}
+                        className="text-red-500 hover:text-red-700 disabled:opacity-30 disabled:cursor-not-allowed mx-auto"
                       >
-                         <Trash2 size={18} />
+                        <Trash2 size={18} />
                       </button>
                     </td>
                   </tr>
@@ -460,7 +463,7 @@ export default function GoodsIssue() {
         </div>
 
         <div className="flex mt-4">
-          <button 
+          <button
             onClick={addItemRow}
             disabled={status === 'APPROVED'}
             className="flex items-center gap-1 text-orange-500 hover:text-orange-600 font-medium disabled:opacity-50"

@@ -75,7 +75,7 @@ export default function Sidebar() {
           </div>
           <div>
             <p className="text-sm font-medium">{currentUser.name}</p>
-            <p className="text-xs text-blue-300">{currentUser.role === 'ADMIN' ? 'Quản trị viên' : currentUser.role === 'MANAGER' ? 'Quản lý kho' : 'Nhân viên'}</p>
+            <p className="text-xs text-blue-300">{currentUser.role === 'ADMIN' ? 'Quản trị viên' : 'Nhân viên'}</p>
           </div>
         </div>
         <div className="flex flex-col gap-1">

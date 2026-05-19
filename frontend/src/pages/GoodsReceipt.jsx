@@ -10,11 +10,11 @@ export default function GoodsReceipt() {
   const navigate = useNavigate();
   const location = useLocation();
   const initialProductId = location.state?.productId;
-  
+
   const [products, setProducts] = useState([]);
-  
+
   const [warehouses, setWarehouses] = useState([]);
-  
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -25,7 +25,7 @@ export default function GoodsReceipt() {
         let productList = [];
         if (prodRes && prodRes.data) productList = prodRes.data;
         else if (Array.isArray(prodRes)) productList = prodRes;
-        
+
         setProducts(productList);
 
         if (initialProductId) {
@@ -52,12 +52,12 @@ export default function GoodsReceipt() {
   const getUserRole = () => {
     const userStr = sessionStorage.getItem('user');
     if (userStr) {
-      try { return JSON.parse(userStr).role; } catch (e) {}
+      try { return JSON.parse(userStr).role; } catch (e) { }
     }
     return 'STAFF';
   };
   const currentUserRole = getUserRole();
-  
+
   // Header form
   const [receiptData, setReceiptData] = useState({
     receiptNo: `PN${Date.now().toString().slice(-6)}`,
@@ -117,7 +117,7 @@ export default function GoodsReceipt() {
       setError('Vui lòng nhập Tên/Mã Nhà cung cấp.');
       return false;
     }
-    
+
     let hasValidItem = false;
     for (let item of items) {
       if (!item.productId) {
@@ -173,11 +173,11 @@ export default function GoodsReceipt() {
   };
 
   const handleApprove = async () => {
-    if (currentUserRole !== 'MANAGER' && currentUserRole !== 'ADMIN') {
+    if (currentUserRole !== 'ADMIN') {
       toast.error('Lỗi: Chỉ quản lý mới có quyền DUYỆT phiếu!');
       return;
     }
-    
+
     if (!validateForm()) return;
     const loadingToast = toast.loading('Đang xử lý duyệt phiếu nhập...');
     try {
@@ -209,14 +209,14 @@ export default function GoodsReceipt() {
           <p className="text-gray-500 text-sm mt-1">Nhập hàng hóa từ nhà cung cấp vào kho</p>
         </div>
         <div className="flex gap-3">
-          <button 
+          <button
             onClick={() => navigate('/transactions')}
             className="bg-gray-100 text-gray-600 border border-gray-200 px-4 py-2 rounded shadow-sm hover:bg-gray-200 transition flex items-center gap-2 font-medium"
           >
             <ArrowLeft size={18} />
             Hủy / Trở về
           </button>
-          <button 
+          <button
             onClick={handleSave}
             disabled={status === 'APPROVED'}
             className="bg-white border border-primary text-primary px-4 py-2 rounded shadow hover:bg-gray-50 transition flex items-center gap-2 disabled:opacity-50"
@@ -224,7 +224,7 @@ export default function GoodsReceipt() {
             <Save size={20} />
             Lưu Tạm
           </button>
-          <button 
+          <button
             onClick={handleApprove}
             disabled={status === 'APPROVED'}
             className="bg-success text-white px-4 py-2 rounded shadow hover:bg-emerald-600 transition flex items-center gap-2 disabled:opacity-50"
@@ -250,8 +250,8 @@ export default function GoodsReceipt() {
               <FileText size={16} className="text-gray-400" />
               Số phiếu
             </label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               name="receiptNo"
               value={receiptData.receiptNo}
               disabled
@@ -263,8 +263,8 @@ export default function GoodsReceipt() {
               <Calendar size={16} className="text-gray-400" />
               Ngày nhập
             </label>
-            <input 
-              type="date" 
+            <input
+              type="date"
               name="date"
               value={receiptData.date}
               onChange={handleHeaderChange}
@@ -277,8 +277,8 @@ export default function GoodsReceipt() {
               <User size={16} className="text-gray-400" />
               Người thực hiện
             </label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               name="personInCharge"
               value={receiptData.personInCharge}
               onChange={handleHeaderChange}
@@ -291,8 +291,8 @@ export default function GoodsReceipt() {
               <Truck size={16} className="text-gray-400" />
               Nhà cung cấp <span className="text-red-500">*</span>
             </label>
-            <input 
-              type="text" 
+            <input
+              type="text"
               name="supplier"
               value={receiptData.supplier}
               onChange={handleHeaderChange}
@@ -324,7 +324,7 @@ export default function GoodsReceipt() {
               <Type size={16} className="text-gray-400" />
               Ghi chú
             </label>
-            <textarea 
+            <textarea
               name="notes"
               value={receiptData.notes}
               onChange={handleHeaderChange}
@@ -340,7 +340,7 @@ export default function GoodsReceipt() {
       {/* Dynamic Items Table */}
       <div className="bg-surface rounded-lg shadow p-5">
         <h2 className="text-lg font-medium text-primary mb-4 border-b pb-2">Danh sách Sản phẩm</h2>
-        
+
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
@@ -372,45 +372,45 @@ export default function GoodsReceipt() {
                       </select>
                     </td>
                     <td className="py-3 px-2">
-                       <input 
-                          type="text" 
-                          value={item.unit}
-                          disabled 
-                          className="w-full bg-gray-100 border text-gray-500 rounded px-2 py-2 text-center"
-                       />
+                      <input
+                        type="text"
+                        value={item.unit}
+                        disabled
+                        className="w-full bg-gray-100 border text-gray-500 rounded px-2 py-2 text-center"
+                      />
                     </td>
                     <td className="py-3 px-2">
-                       <input 
-                          type="number"
-                          min="1"
-                          value={item.quantity}
-                          onChange={(e) => handleItemChange(item.id, 'quantity', e.target.value)}
-                          disabled={status === 'APPROVED'}
-                          className="w-full border rounded px-2 py-2 text-right focus:ring-2 focus:ring-primary focus:outline-none"
-                          placeholder="0"
-                       />
+                      <input
+                        type="number"
+                        min="1"
+                        value={item.quantity}
+                        onChange={(e) => handleItemChange(item.id, 'quantity', e.target.value)}
+                        disabled={status === 'APPROVED'}
+                        className="w-full border rounded px-2 py-2 text-right focus:ring-2 focus:ring-primary focus:outline-none"
+                        placeholder="0"
+                      />
                     </td>
                     <td className="py-3 px-2">
-                       <input 
-                          type="number"
-                          min="0"
-                          value={item.price}
-                          onChange={(e) => handleItemChange(item.id, 'price', e.target.value)}
-                          disabled={status === 'APPROVED'}
-                          className="w-full border rounded px-2 py-2 text-right focus:ring-2 focus:ring-primary focus:outline-none"
-                          placeholder="0"
-                       />
+                      <input
+                        type="number"
+                        min="0"
+                        value={item.price}
+                        onChange={(e) => handleItemChange(item.id, 'price', e.target.value)}
+                        disabled={status === 'APPROVED'}
+                        className="w-full border rounded px-2 py-2 text-right focus:ring-2 focus:ring-primary focus:outline-none"
+                        placeholder="0"
+                      />
                     </td>
                     <td className="py-3 px-4 text-right font-medium text-gray-700">
                       {itemTotal.toLocaleString('vi-VN')}
                     </td>
                     <td className="py-3 px-2 text-center">
-                      <button 
-                         onClick={() => removeItemRow(item.id)}
-                         disabled={items.length === 1 || status === 'APPROVED'}
-                         className="text-red-500 hover:text-red-700 disabled:opacity-30 disabled:cursor-not-allowed mx-auto"
+                      <button
+                        onClick={() => removeItemRow(item.id)}
+                        disabled={items.length === 1 || status === 'APPROVED'}
+                        className="text-red-500 hover:text-red-700 disabled:opacity-30 disabled:cursor-not-allowed mx-auto"
                       >
-                         <Trash2 size={18} />
+                        <Trash2 size={18} />
                       </button>
                     </td>
                   </tr>
@@ -421,7 +421,7 @@ export default function GoodsReceipt() {
         </div>
 
         <div className="flex justify-between items-center mt-4">
-          <button 
+          <button
             onClick={addItemRow}
             disabled={status === 'APPROVED'}
             className="flex items-center gap-1 text-primary hover:text-primary-light font-medium disabled:opacity-50"

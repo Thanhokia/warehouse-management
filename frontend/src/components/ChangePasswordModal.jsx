@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { X, Lock, KeyRound, Loader2, AlertCircle } from 'lucide-react';
+import { X, Lock, KeyRound, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import authService from '../services/authService';
 import toast from 'react-hot-toast';
 
@@ -12,6 +12,16 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  const [showPasswords, setShowPasswords] = useState({
+    old: false,
+    new: false,
+    confirm: false
+  });
+
+  const togglePassword = (field) => {
+    setShowPasswords(prev => ({ ...prev, [field]: !prev[field] }));
+  };
 
   if (!isOpen) return null;
 
@@ -87,15 +97,23 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
               <label className="block text-gray-700 text-sm font-medium mb-1.5">Mật khẩu hiện tại</label>
               <div className="relative">
                 <input
-                  type="password"
+                  type={showPasswords.old ? "text" : "password"}
                   name="oldPassword"
                   value={formData.oldPassword}
                   onChange={handleChange}
                   placeholder="Nhập mật khẩu hiện tại"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
                   disabled={isLoading}
                 />
                 <Lock size={18} className="absolute left-3.5 top-3 text-gray-400" />
+                <button
+                  type="button"
+                  onClick={() => togglePassword('old')}
+                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  tabIndex="-1"
+                >
+                  {showPasswords.old ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 
@@ -103,15 +121,23 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
               <label className="block text-gray-700 text-sm font-medium mb-1.5">Mật khẩu mới</label>
               <div className="relative">
                 <input
-                  type="password"
+                  type={showPasswords.new ? "text" : "password"}
                   name="newPassword"
                   value={formData.newPassword}
                   onChange={handleChange}
                   placeholder="Mật khẩu ít nhất 6 ký tự"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
                   disabled={isLoading}
                 />
                 <KeyRound size={18} className="absolute left-3.5 top-3 text-gray-400" />
+                <button
+                  type="button"
+                  onClick={() => togglePassword('new')}
+                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  tabIndex="-1"
+                >
+                  {showPasswords.new ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
 
@@ -119,15 +145,23 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
               <label className="block text-gray-700 text-sm font-medium mb-1.5">Xác nhận mật khẩu mới</label>
               <div className="relative">
                 <input
-                  type="password"
+                  type={showPasswords.confirm ? "text" : "password"}
                   name="confirmPassword"
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="Nhập lại mật khẩu mới"
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
                   disabled={isLoading}
                 />
                 <Lock size={18} className="absolute left-3.5 top-3 text-gray-400" />
+                <button
+                  type="button"
+                  onClick={() => togglePassword('confirm')}
+                  className="absolute right-3 top-3 text-gray-400 hover:text-gray-600 focus:outline-none"
+                  tabIndex="-1"
+                >
+                  {showPasswords.confirm ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
             </div>
           </div>

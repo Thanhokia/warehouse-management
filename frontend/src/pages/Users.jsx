@@ -263,10 +263,6 @@ export default function Users() {
                           <span className="inline-flex items-center gap-1 bg-purple-100 text-purple-700 font-semibold px-3 py-1 rounded-full text-sm">
                             <ShieldCheck size={14} /> Quản trị viên
                           </span>
-                        ) : user.role === 'MANAGER' ? (
-                          <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 font-semibold px-3 py-1 rounded-full text-sm">
-                            <Shield size={14} /> Quản lý kho
-                          </span>
                         ) : (
                           <span className="inline-block bg-gray-100 text-gray-700 font-semibold px-3 py-1 rounded-full text-sm">
                             Nhân viên

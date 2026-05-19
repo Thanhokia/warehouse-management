@@ -85,7 +85,7 @@ export default function Transactions() {
       } catch (e) {}
     }
     
-    if (role !== 'MANAGER' && role !== 'ADMIN') {
+    if (role !== 'ADMIN') {
       toast.error('Lỗi: Chỉ quản lý mới có quyền DUYỆT phiếu!');
       return;
     }
