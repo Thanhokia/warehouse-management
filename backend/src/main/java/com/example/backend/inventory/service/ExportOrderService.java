@@ -80,7 +80,9 @@ public class ExportOrderService {
             Product product = productRepository.findById(detailReq.getProductId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + detailReq.getProductId()));
 
-            BigDecimal unitPrice = detailReq.getUnitPrice() != null ? detailReq.getUnitPrice() : BigDecimal.ZERO;
+            BigDecimal unitPrice = detailReq.getUnitPrice() != null && detailReq.getUnitPrice().compareTo(BigDecimal.ZERO) > 0
+                    ? detailReq.getUnitPrice()
+                    : (product.getPrice() != null ? product.getPrice() : BigDecimal.ZERO);
             BigDecimal totalPrice = detailReq.getQuantity().multiply(unitPrice);
 
             ExportOrderDetail detail = ExportOrderDetail.builder()

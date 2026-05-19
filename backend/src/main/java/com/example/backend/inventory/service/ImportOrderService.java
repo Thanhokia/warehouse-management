@@ -137,11 +137,34 @@ public class ImportOrderService {
 
     private void updateStockOnComplete(ImportOrder order) {
         for (ImportOrderDetail detail : order.getDetails()) {
+            Product product = detail.getProduct();
+
+            // Tính tổng tồn kho hiện tại (trước khi cộng)
+            BigDecimal totalCurrentStock = stockItemRepository.findByProductId(product.getId()).stream()
+                    .map(StockItem::getQuantity)
+                    .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+            BigDecimal currentPrice = product.getPrice() != null ? product.getPrice() : BigDecimal.ZERO;
+            BigDecimal importQty = detail.getQuantity() != null ? detail.getQuantity() : BigDecimal.ZERO;
+            BigDecimal importPrice = detail.getUnitPrice() != null ? detail.getUnitPrice() : BigDecimal.ZERO;
+
+            // Tính Giá bình quân gia quyền (MAC)
+            BigDecimal newTotalQty = totalCurrentStock.add(importQty);
+            if (newTotalQty.compareTo(BigDecimal.ZERO) > 0 && importQty.compareTo(BigDecimal.ZERO) > 0) {
+                BigDecimal currentTotalValue = totalCurrentStock.multiply(currentPrice);
+                BigDecimal importTotalValue = importQty.multiply(importPrice);
+                BigDecimal newPrice = currentTotalValue.add(importTotalValue)
+                        .divide(newTotalQty, 2, java.math.RoundingMode.HALF_UP);
+                
+                product.setPrice(newPrice);
+                productRepository.save(product);
+            }
+
             StockItem stockItem = stockItemRepository
-                    .findByWarehouseIdAndProductId(order.getWarehouse().getId(), detail.getProduct().getId())
+                    .findByWarehouseIdAndProductId(order.getWarehouse().getId(), product.getId())
                     .orElseGet(() -> StockItem.builder()
                             .warehouse(order.getWarehouse())
-                            .product(detail.getProduct())
+                            .product(product)
                             .quantity(BigDecimal.ZERO)
                             .build());
             stockItem.setQuantity(stockItem.getQuantity().add(detail.getQuantity()));

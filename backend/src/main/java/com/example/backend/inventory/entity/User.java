@@ -59,6 +59,6 @@ public class User {
     private List<ExportOrder> exportOrders;
 
     public enum Role {
-        ADMIN, MANAGER, STAFF
+        ADMIN, STAFF
     }
 }
