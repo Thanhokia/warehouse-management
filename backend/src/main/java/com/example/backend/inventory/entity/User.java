@@ -15,7 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@ToString(exclude = {"importOrders", "exportOrders"})
+@ToString(exclude = { "importOrders", "exportOrders" })
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User {
 
@@ -59,7 +59,6 @@ public class User {
     private List<ExportOrder> exportOrders;
 
     public enum Role {
-        ADMIN, STAFF
+        ADMIN, MANAGER, STAFF
     }
 }
-

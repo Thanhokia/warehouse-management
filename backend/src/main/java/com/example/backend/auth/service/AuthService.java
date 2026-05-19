@@ -1,5 +1,6 @@
 package com.example.backend.auth.service;
 
+import com.example.backend.auth.dto.ChangePasswordRequest;
 import com.example.backend.auth.dto.LoginRequest;
 import com.example.backend.auth.dto.LoginResponse;
 import com.example.backend.common.security.JwtUtil;
@@ -38,6 +39,18 @@ public class AuthService {
                 .fullName(user.getFullName())
                 .role(user.getRole())
                 .build();
+    }
+
+    public void changePassword(String username, ChangePasswordRequest request) {
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new IllegalArgumentException("Người dùng không tồn tại"));
+
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new IllegalArgumentException("Mật khẩu hiện tại không chính xác");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
     }
 }
 
