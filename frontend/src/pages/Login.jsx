@@ -9,11 +9,11 @@ export default function Login() {
     password: '',
     rememberMe: false
   });
-  
+
   const [errors, setErrors] = useState({ username: '', password: '' });
   const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  
+
   const navigate = useNavigate();
 
   const validate = () => {
@@ -52,7 +52,7 @@ export default function Login() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     if (!validate()) return;
 
     setIsLoading(true);
@@ -76,7 +76,7 @@ export default function Login() {
           // Lưu tạm một mock user để test UI nếu backend không trả về
           sessionStorage.setItem('user', JSON.stringify({ name: 'Admin', role: 'ADMIN' }));
         }
-        
+
         // Điều hướng chung về dashboard cho cả nhân viên và quản lý
         navigate('/');
       } else {
@@ -97,7 +97,7 @@ export default function Login() {
   return (
     <div className="min-h-screen bg-[#f0f4f8] flex items-center justify-center p-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-gray-100">
-        
+
         {/* Header Section */}
         <div className="bg-primary px-8 py-10 text-center text-white">
           <div className="flex justify-center mb-3">

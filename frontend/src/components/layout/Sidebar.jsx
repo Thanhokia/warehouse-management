@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard,
@@ -9,9 +9,11 @@ import {
   ArrowUpFromLine,
   FileBarChart,
   Users,
-  LogOut
+  LogOut,
+  KeyRound
 } from 'lucide-react';
 import authService from '../../services/authService';
+import ChangePasswordModal from '../ChangePasswordModal';
 
 export default function Sidebar() {
   const menuItems = [
@@ -21,10 +23,14 @@ export default function Sidebar() {
     { name: 'Kho hàng', path: '/warehouses', icon: <MapPin size={20} /> },
     { name: 'Nhập/Xuất', path: '/transactions', icon: <ArrowDownToLine size={20} /> },
     { name: 'Báo cáo', path: '/reports', icon: <FileBarChart size={20} /> },
-    { name: 'Người dùng', path: '/users', icon: <Users size={20} /> },
   ];
 
+  if (authService.getCurrentUser()?.role === 'ADMIN') {
+    menuItems.push({ name: 'Người dùng', path: '/users', icon: <Users size={20} /> });
+  }
+
   const navigate = useNavigate();
+  const [isChangePasswordOpen, setIsChangePasswordOpen] = useState(false);
   const currentUser = authService.getCurrentUser() || { name: 'Người Dùng', role: 'STAFF' };
 
   const handleLogout = () => {
@@ -72,14 +78,29 @@ export default function Sidebar() {
             <p className="text-xs text-blue-300">{currentUser.role === 'ADMIN' ? 'Quản trị viên' : currentUser.role === 'MANAGER' ? 'Quản lý kho' : 'Nhân viên'}</p>
           </div>
         </div>
-        <button
-          onClick={handleLogout}
-          className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-blue-200 hover:text-white hover:bg-red-500/80 transition-colors"
-        >
-          <LogOut size={20} />
-          <span className="font-medium">Đăng xuất</span>
-        </button>
+        <div className="flex flex-col gap-1">
+          <button
+            onClick={() => setIsChangePasswordOpen(true)}
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-blue-200 hover:text-white hover:bg-white/10 transition-colors"
+          >
+            <KeyRound size={20} />
+            <span className="font-medium">Đổi mật khẩu</span>
+          </button>
+          
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-blue-200 hover:text-white hover:bg-red-500/80 transition-colors"
+          >
+            <LogOut size={20} />
+            <span className="font-medium">Đăng xuất</span>
+          </button>
+        </div>
       </div>
+
+      <ChangePasswordModal 
+        isOpen={isChangePasswordOpen} 
+        onClose={() => setIsChangePasswordOpen(false)} 
+      />
     </div>
   );
 }

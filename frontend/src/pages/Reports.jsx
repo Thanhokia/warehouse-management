@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Filter, AlertTriangle, Package, MapPin, CheckCircle, Loader2 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Search, Filter, AlertTriangle, Package, MapPin, CheckCircle, Loader2, ArrowDownToLine } from 'lucide-react';
 import reportService from '../services/reportService';
 import categoryService from '../services/categoryService';
 import warehouseService from '../services/warehouseService';
@@ -7,6 +8,7 @@ import productService from '../services/productService';
 import Pagination from '../components/common/Pagination';
 
 export default function Reports() {
+  const navigate = useNavigate();
   const [inventory, setInventory] = useState([]);
   const [categories, setCategories] = useState([]);
   const [warehouses, setWarehouses] = useState([]);
@@ -204,6 +206,7 @@ export default function Reports() {
                 <th className="text-center py-3 px-4 text-gray-600 font-medium">Đơn vị</th>
                 <th className="text-right py-3 px-4 text-gray-600 font-medium">Tồn kho</th>
                 <th className="text-center py-3 px-4 text-gray-600 font-medium">Tình trạng</th>
+                <th className="text-center py-3 px-4 text-gray-600 font-medium">Thao tác</th>
               </tr>
             </thead>
             <tbody>
@@ -229,13 +232,28 @@ export default function Reports() {
                       </td>
                       <td className="py-3 px-4 text-center">
                         {isLowStock ? (
-                           <span className="inline-flex items-center gap-1 bg-red-100 text-red-700 text-xs font-semibold px-2 py-1 rounded">
-                             <AlertTriangle size={12} /> Thiếu hàng
+                           <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded ${item.stock === 0 ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
+                             <AlertTriangle size={12} /> {item.stock === 0 ? 'Hết hàng' : 'Thiếu hàng'}
                            </span>
                         ) : (
                            <span className="inline-block bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded">
                              Ổn định
                            </span>
+                        )}
+                      </td>
+                      <td className="py-3 px-4 text-center">
+                        {isLowStock && (
+                          <button
+                            onClick={() => navigate('/import', { state: { productId: item.productId } })}
+                            className={`inline-flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg transition-colors font-medium border shadow-sm ${
+                              item.stock === 0
+                                ? 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200'
+                                : 'bg-amber-50 text-amber-600 hover:bg-amber-100 border-amber-200'
+                            }`}
+                          >
+                            <ArrowDownToLine size={16} /> 
+                            {item.stock === 0 ? 'Nhập khẩn cấp' : 'Nhập thêm'}
+                          </button>
                         )}
                       </td>
                     </tr>

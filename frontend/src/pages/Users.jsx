@@ -10,7 +10,7 @@ export default function Users() {
   const [activities, setActivities] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState('');
-  
+
   const [currentActivityPage, setCurrentActivityPage] = useState(1);
   const ACTIVITIES_PER_PAGE = 10;
 
@@ -107,10 +107,10 @@ export default function Users() {
     if (!dateString) return { time: '', date: '' };
     const date = new Date(dateString);
     const time = date.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }).replace('AM', 'SA').replace('PM', 'CH');
-    
+
     const today = new Date();
     const isToday = date.getDate() === today.getDate() && date.getMonth() === today.getMonth() && date.getFullYear() === today.getFullYear();
-    
+
     return {
       time: time,
       date: isToday ? 'Hôm nay' : date.toLocaleDateString('vi-VN')
@@ -174,6 +174,16 @@ export default function Users() {
   const totalActivityPages = Math.ceil(activities.length / ACTIVITIES_PER_PAGE);
   const activityStartIndex = (currentActivityPage - 1) * ACTIVITIES_PER_PAGE;
   const paginatedActivities = activities.slice(activityStartIndex, activityStartIndex + ACTIVITIES_PER_PAGE);
+
+  if (currentUser.role !== 'ADMIN') {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Shield size={64} className="text-red-400 mb-4" />
+        <h2 className="text-2xl font-bold text-gray-800 mb-2">Truy cập bị từ chối</h2>
+        <p className="text-gray-500">Chỉ có Quản trị viên (ADMIN) mới có quyền truy cập trang quản lý người dùng.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 max-w-6xl mx-auto space-y-6">
@@ -251,7 +261,7 @@ export default function Users() {
                       <td className="py-4 px-6 text-center">
                         {user.role === 'ADMIN' ? (
                           <span className="inline-flex items-center gap-1 bg-purple-100 text-purple-700 font-semibold px-3 py-1 rounded-full text-sm">
-                            <ShieldCheck size={14} /> Quản trị viên Max
+                            <ShieldCheck size={14} /> Quản trị viên
                           </span>
                         ) : user.role === 'MANAGER' ? (
                           <span className="inline-flex items-center gap-1 bg-blue-100 text-blue-700 font-semibold px-3 py-1 rounded-full text-sm">
@@ -306,41 +316,42 @@ export default function Users() {
           </div>
           <p className="text-gray-500 text-sm ml-8">Ghi chép theo thời gian các hoạt động trong hệ thống</p>
         </div>
-        
+
         <div className="p-0">
           {paginatedActivities.length > 0 ? paginatedActivities.map((activity, index) => {
             const style = getActivityStyling(activity.status);
             const { time, date } = formatTime(activity.createdAt);
             return (
-            <div key={activity.id} className={`p-5 flex gap-4 ${index !== paginatedActivities.length - 1 ? 'border-b border-gray-100' : ''}`}>
-              <div className="mt-0.5">
-                {style.icon}
-              </div>
-              <div>
-                <div className="flex items-center gap-2 mb-1 flex-wrap">
-                  <span className="font-semibold text-gray-900">{activity.username}</span>
-                  <span className="text-gray-600">{activity.action}</span>
-                  <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${style.color} border border-opacity-20`}>
-                    {activity.status}
-                  </span>
+              <div key={activity.id} className={`p-5 flex gap-4 ${index !== paginatedActivities.length - 1 ? 'border-b border-gray-100' : ''}`}>
+                <div className="mt-0.5">
+                  {style.icon}
                 </div>
-                <p className="text-gray-800 mb-2">{activity.detail}</p>
-                <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
-                  <Clock size={14} className="text-gray-400" />
-                  <span>{time}</span>
-                  <span className="mx-1">•</span>
-                  <span>{date}</span>
+                <div>
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    <span className="font-semibold text-gray-900">{activity.username}</span>
+                    <span className="text-gray-600">{activity.action}</span>
+                    <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium ${style.color} border border-opacity-20`}>
+                      {activity.status}
+                    </span>
+                  </div>
+                  <p className="text-gray-800 mb-2">{activity.detail}</p>
+                  <div className="flex items-center gap-1.5 text-xs text-gray-500 font-medium">
+                    <Clock size={14} className="text-gray-400" />
+                    <span>{time}</span>
+                    <span className="mx-1">•</span>
+                    <span>{date}</span>
+                  </div>
                 </div>
               </div>
-            </div>
-          )}) : (
+            )
+          }) : (
             <div className="p-10 text-center text-gray-500">Chưa có hoạt động nào được ghi nhận.</div>
           )}
         </div>
-        
+
         {/* Pagination cho Activity Logs */}
         {activities.length > 0 && (
-          <Pagination 
+          <Pagination
             currentPage={currentActivityPage}
             totalPages={totalActivityPages}
             onPageChange={setCurrentActivityPage}
@@ -418,7 +429,6 @@ export default function Users() {
                       className="w-full border rounded-lg pl-10 pr-4 py-2.5 bg-gray-50 focus:bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary focus:outline-none transition appearance-none"
                     >
                       <option value="STAFF">Nhân viên (Quyền cơ bản, Nhập liệu)</option>
-
                       <option value="ADMIN">Quản trị viên (Toàn quyền, Cài đặt)</option>
                     </select>
                     <Shield className="absolute left-3.5 top-3 text-gray-400" size={18} />

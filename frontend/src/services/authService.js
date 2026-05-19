@@ -25,6 +25,11 @@ const authService = {
   
   getToken: () => {
     return sessionStorage.getItem('token');
+  },
+
+  changePassword: async (oldPassword, newPassword) => {
+    const response = await axiosClient.post('/auth/change-password', { oldPassword, newPassword });
+    return response;
   }
 };
 

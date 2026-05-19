@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, Trash2, Save, CheckCircle, FileText, Calendar, User, Truck, Type, ArrowLeft } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import productService from '../services/productService';
 import warehouseService from '../services/warehouseService';
@@ -8,6 +8,9 @@ import transactionService from '../services/transactionService';
 
 export default function GoodsReceipt() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const initialProductId = location.state?.productId;
+  
   const [products, setProducts] = useState([]);
   
   const [warehouses, setWarehouses] = useState([]);
@@ -19,9 +22,23 @@ export default function GoodsReceipt() {
           productService.getAll(),
           warehouseService.getAll()
         ]);
+        let productList = [];
+        if (prodRes && prodRes.data) productList = prodRes.data;
+        else if (Array.isArray(prodRes)) productList = prodRes;
         
-        if (prodRes && prodRes.data) setProducts(prodRes.data);
-        else if (Array.isArray(prodRes)) setProducts(prodRes);
+        setProducts(productList);
+
+        if (initialProductId) {
+          const product = productList.find(p => p.id === Number(initialProductId));
+          if (product) {
+            setItems(prev => prev.map((item, index) => {
+              if (index === 0) {
+                return { ...item, productId: initialProductId, unit: product.unit || '', price: product.price || '' };
+              }
+              return item;
+            }));
+          }
+        }
 
         if (wareRes && wareRes.data) setWarehouses(wareRes.data);
         else if (Array.isArray(wareRes)) setWarehouses(wareRes);
@@ -53,7 +70,7 @@ export default function GoodsReceipt() {
 
   // Dynamic table items
   const [items, setItems] = useState([
-    { id: Date.now(), productId: '', quantity: '', price: '', unit: '' }
+    { id: Date.now(), productId: initialProductId || '', quantity: '', price: '', unit: '' }
   ]);
 
   const [status, setStatus] = useState('DRAFT'); // DRAFT or APPROVED
