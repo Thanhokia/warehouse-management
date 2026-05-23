@@ -21,6 +21,7 @@ public class WarehouseService {
 
     private final WarehouseRepository warehouseRepository;
     private final StockItemRepository stockItemRepository;
+    private final ActivityLogService activityLogService;
 
     public List<WarehouseResponse> getAll() {
         return warehouseRepository.findAll().stream()
@@ -93,7 +94,9 @@ public class WarehouseService {
                 .description(request.getDescription())
                 .isActive(true)
                 .build();
-        return toResponse(warehouseRepository.save(warehouse));
+        Warehouse saved = warehouseRepository.save(warehouse);
+        activityLogService.logAction("đã tạo", "Thành công", "kho hàng mới: " + saved.getName());
+        return toResponse(saved);
     }
 
     @Transactional
@@ -113,7 +116,9 @@ public class WarehouseService {
         if (request.getIsActive() != null) {
             warehouse.setIsActive(request.getIsActive());
         }
-        return toResponse(warehouseRepository.save(warehouse));
+        Warehouse updated = warehouseRepository.save(warehouse);
+        activityLogService.logAction("đã cập nhật", "Thông tin", "thông tin kho hàng: " + updated.getName());
+        return toResponse(updated);
     }
 
     @Transactional
@@ -122,6 +127,7 @@ public class WarehouseService {
                 .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found with id: " + id));
         warehouse.setIsActive(false);
         warehouseRepository.save(warehouse);
+        activityLogService.logAction("đã xóa", "Cảnh báo", "kho hàng: " + warehouse.getName());
     }
 
     private WarehouseResponse toResponse(Warehouse warehouse) {

@@ -7,6 +7,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import org.springframework.security.access.AccessDeniedException;
+
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,6 +44,12 @@ public class GlobalExceptionHandler {
         // 422 Unprocessable Entity — dùng khi logic nghiệp vụ bị vi phạm (tồn kho thiếu, đơn đã hoàn thành...)
         return ResponseEntity.status(HttpStatusCode.valueOf(422))
                 .body(buildResponse(422, exception.getMessage(), null));
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, Object>> handleAccessDenied(AccessDeniedException exception) {
+        return ResponseEntity.status(403)
+                .body(buildResponse(403, "Bạn không có quyền thực hiện thao tác này.", null));
     }
 
     @ExceptionHandler(Exception.class)

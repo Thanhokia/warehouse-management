@@ -17,4 +17,5 @@ public class OverviewResponse {
     private List<StockItemResponse> detailsLowStock;
     private long importsThisMonth;
     private long exportsThisMonth;
+    private List<TopExportProductResponse> topExportProducts;
 }

@@ -58,7 +58,8 @@ public class ImportOrderService {
         }
 
         Warehouse warehouse = warehouseRepository.findById(request.getWarehouseId())
-                .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found with id: " + request.getWarehouseId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Warehouse not found with id: " + request.getWarehouseId()));
 
         User createdBy = userRepository.findById(createdByUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + createdByUserId));
@@ -77,7 +78,8 @@ public class ImportOrderService {
         BigDecimal total = BigDecimal.ZERO;
         for (ImportOrderRequest.DetailRequest detailReq : request.getDetails()) {
             Product product = productRepository.findById(detailReq.getProductId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + detailReq.getProductId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Product not found with id: " + detailReq.getProductId()));
 
             BigDecimal unitPrice = detailReq.getUnitPrice() != null ? detailReq.getUnitPrice() : BigDecimal.ZERO;
             BigDecimal totalPrice = detailReq.getQuantity().multiply(unitPrice);
@@ -111,8 +113,12 @@ public class ImportOrderService {
         if (newStatus == OrderStatus.COMPLETED && currentStatus != OrderStatus.COMPLETED) {
             updateStockOnComplete(order);
             order.setImportDate(LocalDateTime.now());
-            BigDecimal totalQty = order.getDetails().stream().map(ImportOrderDetail::getQuantity).reduce(BigDecimal.ZERO, BigDecimal::add);
-            activityLogService.logAction("đã nhập", "Thành công", totalQty + " sản phẩm vào kho " + order.getWarehouse().getName());
+            String detailStr = order.getDetails().stream()
+                    .map(d -> d.getQuantity().stripTrailingZeros().toPlainString() + " "
+                            + (d.getProduct().getUnit() != null ? d.getProduct().getUnit() : "sản phẩm") + " "
+                            + d.getProduct().getName())
+                    .collect(java.util.stream.Collectors.joining(", "));
+            activityLogService.logAction("đã nhập", "Thành công", detailStr + " vào " + order.getWarehouse().getName());
         }
 
         // Nếu đảo từ COMPLETED sang trạng thái khác -> trừ lại tồn kho
@@ -155,7 +161,7 @@ public class ImportOrderService {
                 BigDecimal importTotalValue = importQty.multiply(importPrice);
                 BigDecimal newPrice = currentTotalValue.add(importTotalValue)
                         .divide(newTotalQty, 2, java.math.RoundingMode.HALF_UP);
-                
+
                 product.setPrice(newPrice);
                 productRepository.save(product);
             }
@@ -216,5 +222,3 @@ public class ImportOrderService {
                 .build();
     }
 }
-
-

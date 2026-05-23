@@ -18,6 +18,7 @@ import java.util.stream.Collectors;
 public class CategoryService {
 
     private final CategoryRepository categoryRepository;
+    private final ActivityLogService activityLogService;
 
     public List<CategoryResponse> getAll() {
         return categoryRepository.findAll().stream()
@@ -55,7 +56,9 @@ public class CategoryService {
                 .type(request.getType())
                 .isActive(true)
                 .build();
-        return toResponse(categoryRepository.save(category));
+        Category saved = categoryRepository.save(category);
+        activityLogService.logAction("đã tạo", "Thành công", "danh mục mới: " + saved.getName());
+        return toResponse(saved);
     }
 
     @Transactional
@@ -75,7 +78,9 @@ public class CategoryService {
         if (request.getIsActive() != null) {
             category.setIsActive(request.getIsActive());
         }
-        return toResponse(categoryRepository.save(category));
+        Category updated = categoryRepository.save(category);
+        activityLogService.logAction("đã cập nhật", "Thông tin", "thông tin danh mục: " + updated.getName());
+        return toResponse(updated);
     }
 
     @Transactional
@@ -83,8 +88,10 @@ public class CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found with id: " + id));
         category.setIsActive(false);
+        String oldName = category.getName();
         category.setName(category.getName() + "_deleted_" + System.currentTimeMillis());
         categoryRepository.save(category);
+        activityLogService.logAction("đã xóa", "Cảnh báo", "danh mục: " + oldName);
     }
 
     private void reclaimInactiveName(String name) {

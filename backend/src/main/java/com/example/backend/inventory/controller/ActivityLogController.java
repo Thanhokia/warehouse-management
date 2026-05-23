@@ -24,6 +24,18 @@ public class ActivityLogController {
 
     @GetMapping
     public ResponseEntity<ApiResponse<List<ActivityLogResponse>>> getRecentActivities() {
-        return ResponseEntity.ok(ApiResponse.ok("Activities retrieved successfully", activityLogService.getRecentActivities()));
+        return ResponseEntity
+                .ok(ApiResponse.ok("Activities retrieved successfully", activityLogService.getRecentActivities()));
+    }
+
+    @org.springframework.web.bind.annotation.PostMapping("/log")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STAFF')")
+    public ResponseEntity<ApiResponse<Void>> logActivity(
+            @org.springframework.web.bind.annotation.RequestBody @jakarta.validation.Valid com.example.backend.inventory.dto.request.ActivityLogRequest request,
+            org.springframework.security.core.Authentication authentication) {
+
+        String username = authentication != null ? authentication.getName() : "System";
+        activityLogService.logActionWithUser(username, request.getAction(), request.getStatus(), request.getDetail());
+        return ResponseEntity.ok(ApiResponse.ok("Activity logged successfully", null));
     }
 }

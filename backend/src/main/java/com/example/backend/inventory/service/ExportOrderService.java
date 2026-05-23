@@ -58,7 +58,8 @@ public class ExportOrderService {
         }
 
         Warehouse warehouse = warehouseRepository.findById(request.getWarehouseId())
-                .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found with id: " + request.getWarehouseId()));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Warehouse not found with id: " + request.getWarehouseId()));
 
         User createdBy = userRepository.findById(createdByUserId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found with id: " + createdByUserId));
@@ -78,11 +79,13 @@ public class ExportOrderService {
         BigDecimal total = BigDecimal.ZERO;
         for (ExportOrderRequest.DetailRequest detailReq : request.getDetails()) {
             Product product = productRepository.findById(detailReq.getProductId())
-                    .orElseThrow(() -> new ResourceNotFoundException("Product not found with id: " + detailReq.getProductId()));
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Product not found with id: " + detailReq.getProductId()));
 
-            BigDecimal unitPrice = detailReq.getUnitPrice() != null && detailReq.getUnitPrice().compareTo(BigDecimal.ZERO) > 0
-                    ? detailReq.getUnitPrice()
-                    : (product.getPrice() != null ? product.getPrice() : BigDecimal.ZERO);
+            BigDecimal unitPrice = detailReq.getUnitPrice() != null
+                    && detailReq.getUnitPrice().compareTo(BigDecimal.ZERO) > 0
+                            ? detailReq.getUnitPrice()
+                            : (product.getPrice() != null ? product.getPrice() : BigDecimal.ZERO);
             BigDecimal totalPrice = detailReq.getQuantity().multiply(unitPrice);
 
             ExportOrderDetail detail = ExportOrderDetail.builder()
@@ -114,8 +117,13 @@ public class ExportOrderService {
         if (newStatus == OrderStatus.COMPLETED && currentStatus != OrderStatus.COMPLETED) {
             deductStockOnComplete(order);
             order.setExportDate(LocalDateTime.now());
-            BigDecimal totalQty = order.getDetails().stream().map(ExportOrderDetail::getQuantity).reduce(BigDecimal.ZERO, BigDecimal::add);
-            activityLogService.logAction("đã xuất", "Thành công", totalQty + " sản phẩm từ kho " + order.getWarehouse().getName());
+            String detailStr = order.getDetails().stream()
+                    .map(d -> d.getQuantity().stripTrailingZeros().toPlainString() + " "
+                            + (d.getProduct().getUnit() != null ? d.getProduct().getUnit() : "sản phẩm") + " "
+                            + d.getProduct().getName())
+                    .collect(java.util.stream.Collectors.joining(", "));
+            activityLogService.logAction("đã xuất", "Thành công",
+                    detailStr + " từ " + order.getWarehouse().getName());
         }
 
         // Nếu đảo từ COMPLETED sang trạng thái khác -> cộng lại tồn kho
@@ -143,7 +151,8 @@ public class ExportOrderService {
             StockItem stockItem = stockItemRepository
                     .findByWarehouseIdAndProductId(order.getWarehouse().getId(), detail.getProduct().getId())
                     .orElseThrow(() -> new IllegalStateException(
-                            "Product " + detail.getProduct().getCode() + " is not in stock at warehouse " + order.getWarehouse().getName()));
+                            "Product " + detail.getProduct().getCode() + " is not in stock at warehouse "
+                                    + order.getWarehouse().getName()));
 
             if (stockItem.getQuantity().compareTo(detail.getQuantity()) < 0) {
                 throw new IllegalStateException(
@@ -204,5 +213,3 @@ public class ExportOrderService {
                 .build();
     }
 }
-
-

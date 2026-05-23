@@ -10,6 +10,9 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import jakarta.validation.Valid;
+import org.springframework.security.core.Authentication;
+import com.example.backend.inventory.dto.request.StockAdjustRequest;
 
 @Tag(name = "Stock")
 @RestController
@@ -55,5 +58,14 @@ public class StockController {
                 : stockService.getLowStock();
 
         return ResponseEntity.ok(ApiResponse.ok(result));
+    }
+
+    @PostMapping("/adjust-batch")
+    public ResponseEntity<ApiResponse<String>> adjustStockBatch(
+            @Valid @RequestBody List<StockAdjustRequest> requests,
+            Authentication authentication) {
+        
+        stockService.adjustStockBatch(requests, authentication.getName());
+        return ResponseEntity.ok(ApiResponse.ok("Stock adjusted successfully"));
     }
 }

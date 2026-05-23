@@ -18,11 +18,11 @@ public interface StockItemRepository extends JpaRepository<StockItem, Long> {
     List<StockItem> findByProductId(Long productId);
 
     // Lấy tất cả stock item có tồn kho dưới ngưỡng cảnh báo
-    @Query("SELECT s FROM StockItem s WHERE s.quantity < s.product.minStockLevel")
+    @Query("SELECT s FROM StockItem s WHERE s.quantity <= s.product.minStockLevel")
     List<StockItem> findAllBelowMinLevel();
 
     // Lấy stock item dưới ngưỡng cảnh báo theo kho
-    @Query("SELECT s FROM StockItem s WHERE s.warehouse.id = :warehouseId AND s.quantity < s.product.minStockLevel")
+    @Query("SELECT s FROM StockItem s WHERE s.warehouse.id = :warehouseId AND s.quantity <= s.product.minStockLevel")
     List<StockItem> findBelowMinLevelByWarehouse(Long warehouseId);
 }
 

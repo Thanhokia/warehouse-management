@@ -3,6 +3,7 @@ package com.example.backend.inventory.service;
 import com.example.backend.inventory.dto.response.InventoryTrendResponse;
 import com.example.backend.inventory.dto.response.OverviewResponse;
 import com.example.backend.inventory.dto.response.StockItemResponse;
+import com.example.backend.inventory.dto.response.TopExportProductResponse;
 import com.example.backend.inventory.entity.ExportOrder;
 import com.example.backend.inventory.entity.ExportOrderDetail;
 import com.example.backend.inventory.entity.ImportOrder;
@@ -35,6 +36,7 @@ public class DashboardService {
         List<StockItemResponse> lowStock = stockService.getLowStock();
         long totalLowStock = lowStock.size();
         List<StockItemResponse> detailsLowStock = lowStock.stream()
+                .filter(item -> item.getQuantity().compareTo(item.getMinStockLevel()) <= 0)
                 .limit(5)
                 .collect(java.util.stream.Collectors.toList());
 
@@ -52,12 +54,35 @@ public class DashboardService {
                 .setParameter("date", thirtyDaysAgo)
                 .getSingleResult();
 
+        List<Object[]> topProductsData = entityManager.createQuery(
+                "SELECT d.product.id, d.product.code, d.product.name, d.product.unit, SUM(d.quantity) as totalQty " +
+                "FROM ExportOrderDetail d JOIN d.exportOrder o " +
+                "WHERE o.status = :status AND COALESCE(o.exportDate, o.createdAt) >= :date " +
+                "GROUP BY d.product.id, d.product.code, d.product.name, d.product.unit " +
+                "ORDER BY totalQty DESC", Object[].class)
+                .setParameter("status", ExportOrder.OrderStatus.COMPLETED)
+                .setParameter("date", thirtyDaysAgo)
+                .setMaxResults(5)
+                .getResultList();
+
+        List<TopExportProductResponse> topExportProducts = new ArrayList<>();
+        for (Object[] row : topProductsData) {
+            topExportProducts.add(TopExportProductResponse.builder()
+                    .productId((Long) row[0])
+                    .productCode((String) row[1])
+                    .productName((String) row[2])
+                    .productUnit((String) row[3])
+                    .totalQuantity((BigDecimal) row[4])
+                    .build());
+        }
+
         return OverviewResponse.builder()
                 .totalProducts(totalProducts)
                 .totalLowStock(totalLowStock)
                 .detailsLowStock(detailsLowStock)
                 .importsThisMonth(importsThisMonth)
                 .exportsThisMonth(exportsThisMonth)
+                .topExportProducts(topExportProducts)
                 .build();
     }
 
