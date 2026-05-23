@@ -5,7 +5,7 @@ import reportService from '../../services/reportService';
 import toast from 'react-hot-toast';
 
 export default function MainLayout() {
-  const notifiedProductsRef = useRef(new Set());
+  const notifiedProductsRef = useRef(new Map());
 
   useEffect(() => {
     const checkLowStock = async () => {
@@ -14,12 +14,32 @@ export default function MainLayout() {
         const lowStockItems = response?.data || (Array.isArray(response) ? response : []);
         
         lowStockItems.forEach(item => {
-          if (!notifiedProductsRef.current.has(item.productId)) {
-            notifiedProductsRef.current.add(item.productId);
-            const message = item.quantity === 0 
+          const currentQty = Number(item.quantity);
+          const key = `${item.warehouseId}-${item.productId}`;
+          const prevQuantity = notifiedProductsRef.current.get(key);
+          
+          // Notify if we have never seen it OR if the quantity just decreased further
+          if (prevQuantity === undefined || currentQty < prevQuantity) {
+            notifiedProductsRef.current.set(key, currentQty);
+            const message = currentQty === 0 
               ? `Cảnh báo: Sản phẩm "${item.productName}" ĐÃ HẾT HÀNG!`
-              : `Cảnh báo: Sản phẩm "${item.productName}" sắp hết hàng (chỉ còn ${item.quantity})!`;
-            toast.error(message, { duration: 6000, icon: '⚠️' });
+              : `Cảnh báo: Sản phẩm "${item.productName}" sắp hết hàng (chỉ còn ${currentQty})!`;
+              
+            toast.error(message, { 
+              duration: 8000, 
+              icon: '⚠️',
+              id: `low-stock-${key}-${currentQty}`, // Prevent duplicate toasts
+              style: {
+                border: '1px solid #FFB020',
+                padding: '16px',
+                color: '#B7791F',
+                backgroundColor: '#FFFAF0',
+                maxWidth: '500px'
+              }
+            });
+          } else if (currentQty > prevQuantity) {
+            // Just update the map if stock went up but is still below minimum
+            notifiedProductsRef.current.set(key, currentQty);
           }
         });
       } catch (error) {
@@ -33,7 +53,16 @@ export default function MainLayout() {
     // Thiết lập tự động kiểm tra mỗi 30 giây (Realtime Polling)
     const intervalId = setInterval(checkLowStock, 30000);
 
-    return () => clearInterval(intervalId);
+    // Lắng nghe event khi có giao dịch được duyệt để kiểm tra ngay (có delay nhỏ để chờ DB update)
+    const handleTransaction = () => {
+      setTimeout(checkLowStock, 800);
+    };
+    window.addEventListener('transaction_completed', handleTransaction);
+
+    return () => {
+      clearInterval(intervalId);
+      window.removeEventListener('transaction_completed', handleTransaction);
+    };
   }, []);
 
   return (

@@ -71,7 +71,7 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[100] backdrop-blur-sm">
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-md border border-gray-100 overflow-hidden">
+      <div className="bg-white text-gray-900 rounded-xl shadow-2xl w-full max-w-md border border-gray-100 overflow-hidden">
         <div className="flex justify-between items-center p-5 border-b bg-gray-50/50">
           <div className="flex items-center gap-2">
             <div className="bg-primary/10 p-2 rounded-full text-primary">
@@ -102,7 +102,7 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
                   value={formData.oldPassword}
                   onChange={handleChange}
                   placeholder="Nhập mật khẩu hiện tại"
-                  className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
                   disabled={isLoading}
                 />
                 <Lock size={18} className="absolute left-3.5 top-3 text-gray-400" />
@@ -126,7 +126,7 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
                   value={formData.newPassword}
                   onChange={handleChange}
                   placeholder="Mật khẩu ít nhất 6 ký tự"
-                  className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
                   disabled={isLoading}
                 />
                 <KeyRound size={18} className="absolute left-3.5 top-3 text-gray-400" />
@@ -150,7 +150,7 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
                   value={formData.confirmPassword}
                   onChange={handleChange}
                   placeholder="Nhập lại mật khẩu mới"
-                  className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-gray-300 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all"
+                  className="w-full pl-10 pr-10 py-2.5 rounded-lg border border-gray-300 bg-white text-gray-900 focus:border-primary focus:ring-1 focus:ring-primary focus:outline-none transition-all [&::-ms-reveal]:hidden [&::-ms-clear]:hidden"
                   disabled={isLoading}
                 />
                 <Lock size={18} className="absolute left-3.5 top-3 text-gray-400" />

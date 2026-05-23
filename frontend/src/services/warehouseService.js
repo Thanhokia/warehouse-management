@@ -29,6 +29,11 @@ const warehouseService = {
   // Xóa kho hàng
   delete: async (id) => {
     return await axiosClient.delete(`/warehouses/${id}`);
+  },
+
+  // Điều chỉnh tồn kho hàng loạt
+  adjustStockBatch: async (adjustments) => {
+    return await axiosClient.post('/stock/adjust-batch', adjustments);
   }
 };
 

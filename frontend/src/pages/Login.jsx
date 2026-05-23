@@ -84,8 +84,17 @@ export default function Login() {
       }
     } catch (err) {
       // Bắt lỗi từ server hoặc network
-      if (err.response && (err.response.status === 401 || err.response.status === 403)) {
-        setApiError('Sai tài khoản hoặc mật khẩu');
+      if (err.response) {
+        const status = err.response.status;
+        const msg = err.response.data?.message || '';
+
+        if (status === 401 || status === 403 || status === 409 || msg.toLowerCase().includes('invalid')) {
+          setApiError('Sai tài khoản hoặc mật khẩu');
+        } else if (status === 422 || msg.toLowerCase().includes('disabled')) {
+          setApiError('Tài khoản đã bị vô hiệu hóa.');
+        } else {
+          setApiError(msg || 'Có lỗi xảy ra từ máy chủ. Vui lòng thử lại.');
+        }
       } else {
         setApiError('Có lỗi xảy ra kết nối đến máy chủ. Vui lòng thử lại.');
       }
@@ -182,7 +191,6 @@ export default function Login() {
                 <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
               ) : (
                 <>
-                  <LogIn size={20} />
                   Đăng nhập
                 </>
               )}

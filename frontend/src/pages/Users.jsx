@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Trash2, X, Shield, ShieldCheck, Mail, User, Loader2, Activity, CheckCircle2, Info, AlertCircle, Clock } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, X, Shield, ShieldCheck, Mail, User, Loader2, Activity, CheckCircle2, Info, AlertCircle, Clock, Filter } from 'lucide-react';
 import userService from '../services/userService';
 import activityService from '../services/activityService';
 import authService from '../services/authService';
@@ -13,6 +13,10 @@ export default function Users() {
 
   const [currentActivityPage, setCurrentActivityPage] = useState(1);
   const ACTIVITIES_PER_PAGE = 10;
+
+  // Activity filter states
+  const [activitySearchTerm, setActivitySearchTerm] = useState('');
+  const [activityFilterStatus, setActivityFilterStatus] = useState('ALL');
 
   // Lấy thông tin user thực tế đang đăng nhập (để validate không cho xóa chính mình)
   const currentUser = authService.getCurrentUser() || {};
@@ -90,6 +94,11 @@ export default function Users() {
     fetchUsers();
     fetchActivities();
   }, []);
+
+  // Reset activity page when filters change
+  useEffect(() => {
+    setCurrentActivityPage(1);
+  }, [activitySearchTerm, activityFilterStatus]);
 
   const getActivityStyling = (status) => {
     switch (status) {
@@ -171,9 +180,22 @@ export default function Users() {
     }
   };
 
-  const totalActivityPages = Math.ceil(activities.length / ACTIVITIES_PER_PAGE);
-  const activityStartIndex = (currentActivityPage - 1) * ACTIVITIES_PER_PAGE;
-  const paginatedActivities = activities.slice(activityStartIndex, activityStartIndex + ACTIVITIES_PER_PAGE);
+  const filteredActivities = activities.filter(activity => {
+    const term = activitySearchTerm.toLowerCase();
+    const matchesSearch =
+      (activity.username && activity.username.toLowerCase().includes(term)) ||
+      (activity.action && activity.action.toLowerCase().includes(term)) ||
+      (activity.detail && activity.detail.toLowerCase().includes(term));
+
+    const matchesStatus = activityFilterStatus === 'ALL' || activity.status === activityFilterStatus;
+
+    return matchesSearch && matchesStatus;
+  });
+
+  const totalActivityPages = Math.ceil(filteredActivities.length / ACTIVITIES_PER_PAGE);
+  const safeActivityPage = Math.min(currentActivityPage, totalActivityPages > 0 ? totalActivityPages : 1);
+  const activityStartIndex = (safeActivityPage - 1) * ACTIVITIES_PER_PAGE;
+  const paginatedActivities = filteredActivities.slice(activityStartIndex, activityStartIndex + ACTIVITIES_PER_PAGE);
 
   if (currentUser.role !== 'ADMIN') {
     return (
@@ -189,7 +211,7 @@ export default function Users() {
     <div className="p-6 max-w-6xl mx-auto space-y-6">
       <div className="flex justify-between items-center bg-white p-5 rounded-lg shadow-sm border border-gray-100">
         <div>
-          <h1 className="text-2xl font-semibold text-primary">Quản lý Người dùng & Phân Quyền</h1>
+          <h1 className="text-2xl font-semibold text-primary">Quản lý Người dùng và Phân quyền</h1>
           <p className="text-gray-500 text-sm mt-1">Thiết lập tài khoản và quyền truy cập vào hệ thống kho</p>
         </div>
         <button
@@ -305,12 +327,42 @@ export default function Users() {
 
       {/* Activity Log Component */}
       <div className="bg-white rounded-lg shadow-sm border border-gray-100 mt-8">
-        <div className="p-5 border-b border-gray-100">
-          <div className="flex items-center gap-2 mb-1">
-            <Activity className="text-blue-600" size={24} />
-            <h2 className="text-xl font-semibold text-gray-800">Nhật ký hoạt động</h2>
+        <div className="p-5 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <Activity className="text-blue-600" size={24} />
+              <h2 className="text-xl font-semibold text-gray-800">Nhật ký hoạt động</h2>
+            </div>
+            <p className="text-gray-500 text-sm ml-8">Ghi chép theo thời gian các hoạt động trong hệ thống</p>
           </div>
-          <p className="text-gray-500 text-sm ml-8">Ghi chép theo thời gian các hoạt động trong hệ thống</p>
+
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Tìm người dùng, hoạt động..."
+                value={activitySearchTerm}
+                onChange={(e) => setActivitySearchTerm(e.target.value)}
+                className="w-full sm:w-56 pl-9 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary transition"
+              />
+              <Search className="absolute left-3 top-2 text-gray-400" size={14} />
+            </div>
+
+            <div className="relative">
+              <select
+                value={activityFilterStatus}
+                onChange={(e) => setActivityFilterStatus(e.target.value)}
+                className="w-full sm:w-44 pl-9 pr-8 py-1.5 text-sm border border-gray-200 rounded-lg appearance-none bg-white focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary cursor-pointer text-gray-700 transition"
+              >
+                <option value="ALL">Tất cả trạng thái</option>
+                <option value="Thành công">Thành công</option>
+                <option value="Cảnh báo">Cảnh báo</option>
+                <option value="Thông tin">Thông tin</option>
+                <option value="Lỗi">Lỗi</option>
+              </select>
+              <Filter className="absolute left-3 top-2 text-gray-400" size={14} />
+            </div>
+          </div>
         </div>
 
         <div className="p-0">
@@ -346,9 +398,9 @@ export default function Users() {
         </div>
 
         {/* Pagination cho Activity Logs */}
-        {activities.length > 0 && (
+        {filteredActivities.length > 0 && (
           <Pagination
-            currentPage={currentActivityPage}
+            currentPage={safeActivityPage}
             totalPages={totalActivityPages}
             onPageChange={setCurrentActivityPage}
           />

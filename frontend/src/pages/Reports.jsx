@@ -18,7 +18,7 @@ export default function Reports() {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [warehouseFilter, setWarehouseFilter] = useState('');
-  
+
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
 
@@ -99,8 +99,8 @@ export default function Reports() {
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-semibold text-primary">Báo Cáo Tồn Kho</h1>
-          <p className="text-gray-500 text-sm mt-1">Theo dõi số lượng hàng hóa và tình trạng cảnh báo</p>
+          <h1 className="text-2xl font-semibold text-primary">Theo Dõi Tồn Kho</h1>
+          <p className="text-gray-500 text-sm mt-1">Theo dõi số lượng hàng hóa, cảnh báo tồn kho và thống kê dữ liệu</p>
         </div>
       </div>
 
@@ -108,15 +108,15 @@ export default function Reports() {
       <div className="bg-white rounded-lg shadow-sm border border-orange-200 overflow-hidden">
         <div className="bg-orange-50 px-5 py-3 border-b border-orange-100 flex items-center gap-2">
           <AlertTriangle className="text-orange-500" size={20} />
-          <h2 className="text-lg font-medium text-orange-800">Cảnh báo tồn kho thấp sắp hết</h2>
+          <h2 className="text-lg font-medium text-orange-800">Cảnh báo tồn kho thấp</h2>
           <span className="bg-orange-200 text-orange-800 text-xs font-bold px-2 py-0.5 rounded-full ml-2">
             {lowStockItems.length}
           </span>
         </div>
-        
+
         <div className="p-5">
           {lowStockItems.length > 0 ? (
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {lowStockItems.map(item => (
                 <div key={item.id} className="border border-red-100 bg-red-50/30 rounded p-3 flex justify-between items-start">
                   <div>
@@ -131,7 +131,7 @@ export default function Reports() {
                   </div>
                 </div>
               ))}
-           </div>
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-6 text-gray-500">
               <CheckCircle className="text-green-500 mb-2" size={32} />
@@ -149,13 +149,13 @@ export default function Reports() {
               <Package size={20} />
               Bảng tồn kho hiện tại
             </h2>
-            
+
             {/* Filters */}
             <div className="flex flex-wrap gap-3">
               <div className="relative min-w-[200px]">
-                <input 
-                  type="text" 
-                  placeholder="Tìm mã hoặc tên SP..." 
+                <input
+                  type="text"
+                  placeholder="Tìm mã hoặc tên SP..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full pl-9 pr-3 py-1.5 border rounded focus:ring-2 focus:ring-primary focus:outline-none text-sm"
@@ -164,7 +164,7 @@ export default function Reports() {
               </div>
 
               <div className="relative min-w-[150px]">
-                <select 
+                <select
                   value={categoryFilter}
                   onChange={(e) => setCategoryFilter(e.target.value)}
                   className="w-full pl-8 pr-3 py-1.5 border rounded focus:ring-2 focus:ring-primary focus:outline-none text-sm appearance-none bg-white"
@@ -178,7 +178,7 @@ export default function Reports() {
               </div>
 
               <div className="relative min-w-[150px]">
-                <select 
+                <select
                   value={warehouseFilter}
                   onChange={(e) => setWarehouseFilter(e.target.value)}
                   className="w-full pl-8 pr-3 py-1.5 border rounded focus:ring-2 focus:ring-primary focus:outline-none text-sm appearance-none bg-white"
@@ -205,6 +205,7 @@ export default function Reports() {
                 <th className="text-left py-3 px-4 text-gray-600 font-medium">Kho bảo quản</th>
                 <th className="text-center py-3 px-4 text-gray-600 font-medium">Đơn vị</th>
                 <th className="text-right py-3 px-4 text-gray-600 font-medium">Tồn kho</th>
+                <th className="text-right py-3 px-4 text-gray-600 font-medium">Tồn tối thiểu</th>
                 <th className="text-center py-3 px-4 text-gray-600 font-medium">Tình trạng</th>
                 <th className="text-center py-3 px-4 text-gray-600 font-medium">Thao tác</th>
               </tr>
@@ -212,7 +213,7 @@ export default function Reports() {
             <tbody>
               {isLoading ? (
                 <tr>
-                  <td colSpan="7" className="text-center py-10">
+                  <td colSpan="9" className="text-center py-10">
                     <Loader2 className="animate-spin text-primary mx-auto mb-2" size={32} />
                     <p className="text-gray-500">Đang tải báo cáo tồn kho...</p>
                   </td>
@@ -230,28 +231,30 @@ export default function Reports() {
                       <td className={`py-3 px-4 text-right font-bold ${isLowStock ? 'text-red-600' : 'text-gray-700'}`}>
                         {item.stock}
                       </td>
+                      <td className="py-3 px-4 text-right text-gray-500 font-medium">
+                        {item.minStock}
+                      </td>
                       <td className="py-3 px-4 text-center">
                         {isLowStock ? (
-                           <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 rounded ${item.stock === 0 ? 'bg-red-100 text-red-700' : 'bg-orange-100 text-orange-700'}`}>
-                             <AlertTriangle size={12} /> {item.stock === 0 ? 'Hết hàng' : 'Thiếu hàng'}
-                           </span>
+                          <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-1 ${item.stock === 0 ? 'text-red-600' : 'text-orange-600'}`}>
+                            <AlertTriangle size={12} /> {item.stock === 0 ? 'Hết hàng' : 'Thiếu hàng'}
+                          </span>
                         ) : (
-                           <span className="inline-block bg-green-100 text-green-700 text-xs font-semibold px-2 py-1 rounded">
-                             Ổn định
-                           </span>
+                          <span className="inline-block text-green-600 text-xs font-semibold px-2 py-1">
+                            Ổn định
+                          </span>
                         )}
                       </td>
                       <td className="py-3 px-4 text-center">
                         {isLowStock && (
                           <button
                             onClick={() => navigate('/import', { state: { productId: item.productId } })}
-                            className={`inline-flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg transition-colors font-medium border shadow-sm ${
-                              item.stock === 0
-                                ? 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200'
-                                : 'bg-amber-50 text-amber-600 hover:bg-amber-100 border-amber-200'
-                            }`}
+                            className={`inline-flex items-center gap-1 text-sm px-3 py-1.5 rounded-lg transition-colors font-medium border shadow-sm ${item.stock === 0
+                              ? 'bg-red-50 text-red-600 hover:bg-red-100 border-red-200'
+                              : 'bg-amber-50 text-amber-600 hover:bg-amber-100 border-amber-200'
+                              }`}
                           >
-                            <ArrowDownToLine size={16} /> 
+                            <ArrowDownToLine size={16} />
                             {item.stock === 0 ? 'Nhập khẩn cấp' : 'Nhập thêm'}
                           </button>
                         )}
@@ -261,7 +264,7 @@ export default function Reports() {
                 })
               ) : (
                 <tr>
-                  <td colSpan="7" className="text-center py-10 text-gray-500">
+                  <td colSpan="9" className="text-center py-10 text-gray-500">
                     <Package className="mx-auto text-gray-300 mb-3" size={40} />
                     <p>Không tìm thấy sản phẩm nào trong kho hàng với điều kiện lọc này.</p>
                   </td>
@@ -270,10 +273,10 @@ export default function Reports() {
             </tbody>
           </table>
         </div>
-        
+
         {/* Pagination */}
         {!isLoading && filteredInventory.length > 0 && (
-          <Pagination 
+          <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
             onPageChange={setCurrentPage}

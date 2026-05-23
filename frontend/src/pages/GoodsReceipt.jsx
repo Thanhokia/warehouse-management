@@ -185,7 +185,7 @@ export default function GoodsReceipt() {
       const createdId = res.data?.id || res.id;
       await transactionService.updateImportStatus(createdId, 'COMPLETED');
       setStatus('APPROVED');
-      toast.success('Phiếu nhập đã được DUYỆT thành công. Hàng hóa đã được cộng vào Tồn kho.', { id: loadingToast, duration: 4000 });
+      toast.success('Phiếu nhập đã được DUYỆT thành công. Hàng hóa đã được cộng vào tồn kho.', { id: loadingToast, duration: 4000 });
       navigate('/transactions');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Lỗi khi duyệt phiếu nhập', { id: loadingToast });
@@ -205,8 +205,8 @@ export default function GoodsReceipt() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-primary">Tạo Phiếu Nhập Kho</h1>
-          <p className="text-gray-500 text-sm mt-1">Nhập hàng hóa từ nhà cung cấp vào kho</p>
+          <h1 className="text-2xl font-semibold text-primary">Tạo phiếu nhập kho</h1>
+
         </div>
         <div className="flex gap-3">
           <button
@@ -214,7 +214,7 @@ export default function GoodsReceipt() {
             className="bg-gray-100 text-gray-600 border border-gray-200 px-4 py-2 rounded shadow-sm hover:bg-gray-200 transition flex items-center gap-2 font-medium"
           >
             <ArrowLeft size={18} />
-            Hủy / Trở về
+            Hủy
           </button>
           <button
             onClick={handleSave}
@@ -222,7 +222,7 @@ export default function GoodsReceipt() {
             className="bg-white border border-primary text-primary px-4 py-2 rounded shadow hover:bg-gray-50 transition flex items-center gap-2 disabled:opacity-50"
           >
             <Save size={20} />
-            Lưu Tạm
+            Lưu
           </button>
           <button
             onClick={handleApprove}
@@ -339,7 +339,7 @@ export default function GoodsReceipt() {
 
       {/* Dynamic Items Table */}
       <div className="bg-surface rounded-lg shadow p-5">
-        <h2 className="text-lg font-medium text-primary mb-4 border-b pb-2">Danh sách Sản phẩm</h2>
+        <h2 className="text-lg font-medium text-primary mb-4 border-b pb-2">Danh sách sản phẩm</h2>
 
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">

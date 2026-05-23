@@ -234,6 +234,48 @@ export default function GoodsIssue() {
       await transactionService.updateExportStatus(createdId, 'COMPLETED');
       setStatus('APPROVED');
       toast.success('Phiếu xuất đã được DUYỆT thành công. Hệ thống đã trừ tồn kho.', { id: loadingToast, duration: 4000 });
+
+      // Báo cho MainLayout kiểm tra tồn kho xem có rớt dưới ngưỡng không
+      window.dispatchEvent(new Event('transaction_completed'));
+
+      // Kiểm tra cục bộ ngay lập tức để đảm bảo thông báo hiện chuẩn xác khi chuyển trang
+      const payload = buildPayload();
+      if (payload.warehouseId) {
+        warehouseService.getStock(payload.warehouseId).then(stockRes => {
+          const stocks = stockRes.data || (Array.isArray(stockRes) ? stockRes : []);
+          const exportedProductIds = payload.details.map(d => d.productId);
+          const lowStockItems = stocks.filter(s =>
+            exportedProductIds.includes(s.productId) &&
+            s.minStockLevel !== undefined && s.minStockLevel !== null &&
+            s.quantity < s.minStockLevel
+          );
+
+          if (lowStockItems.length > 0) {
+            setTimeout(() => {
+              lowStockItems.forEach(item => {
+                const currentQty = Number(item.quantity);
+                const msg = currentQty === 0
+                  ? `Cảnh báo: Sản phẩm "${item.productName}" ĐÃ HẾT HÀNG!`
+                  : `Cảnh báo: Sản phẩm "${item.productName}" sắp hết hàng (chỉ còn ${currentQty})!`;
+
+                toast.error(msg, {
+                  duration: 8000,
+                  icon: '⚠️',
+                  id: `low-stock-${item.warehouseId}-${item.productId}-${currentQty}`,
+                  style: {
+                    border: '1px solid #FFB020',
+                    padding: '16px',
+                    color: '#B7791F',
+                    backgroundColor: '#FFFAF0',
+                    maxWidth: '500px'
+                  }
+                });
+              });
+            }, 500);
+          }
+        }).catch(err => console.error(err));
+      }
+
       navigate('/transactions');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Lỗi khi duyệt phiếu xuất', { id: loadingToast });
@@ -245,8 +287,8 @@ export default function GoodsIssue() {
     <div className="p-6 max-w-6xl mx-auto">
       <div className="flex justify-between items-center mb-6">
         <div>
-          <h1 className="text-2xl font-semibold text-primary">Tạo Phiếu Xuất Kho</h1>
-          <p className="text-gray-500 text-sm mt-1">Xuất hàng hóa khỏi kho trung tâm</p>
+          <h1 className="text-2xl font-semibold text-primary">Tạo phiếu xuất kho</h1>
+
         </div>
         <div className="flex gap-3">
           <button
@@ -254,7 +296,7 @@ export default function GoodsIssue() {
             className="bg-gray-100 text-gray-600 border border-gray-200 px-4 py-2 rounded shadow-sm hover:bg-gray-200 transition flex items-center gap-2 font-medium"
           >
             <ArrowLeft size={18} />
-            Hủy / Trở về
+            Hủy
           </button>
           <button
             onClick={handleSave}
@@ -262,7 +304,7 @@ export default function GoodsIssue() {
             className="bg-white border border-primary text-primary px-4 py-2 rounded shadow hover:bg-gray-50 transition flex items-center gap-2 disabled:opacity-50"
           >
             <Save size={20} />
-            Lưu Tạm
+            Lưu
           </button>
           <button
             onClick={handleApprove}

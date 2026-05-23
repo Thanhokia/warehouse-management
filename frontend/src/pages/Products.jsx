@@ -41,6 +41,7 @@ export default function Products() {
       let fetchedProducts = [];
       if (prodRes && prodRes.data) fetchedProducts = prodRes.data;
       else if (Array.isArray(prodRes)) fetchedProducts = prodRes;
+      fetchedProducts = fetchedProducts.filter(p => p.isActive !== false);
 
       let fetchedCategories = [];
       if (catRes && catRes.data) fetchedCategories = catRes.data;

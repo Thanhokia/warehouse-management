@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Minus, Loader2 } from 'lucide-react';
+import { Plus, Minus, Loader2, Eye, Search, Filter, Check, X } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import transactionService from '../services/transactionService';
+import warehouseService from '../services/warehouseService';
 import ConfirmModal from '../components/ConfirmModal';
 import Pagination from '../components/common/Pagination';
 
@@ -13,6 +14,12 @@ export default function Transactions() {
   const [confirmState, setConfirmState] = useState({ isOpen: false, tx: null, action: null });
   const [currentPage, setCurrentPage] = useState(1);
   const [viewTx, setViewTx] = useState(null); // The transaction to view
+
+  // Filter states
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('ALL');
+  const [filterStatus, setFilterStatus] = useState('ALL');
+
   const ITEMS_PER_PAGE = 10;
 
   const fetchTransactions = async () => {
@@ -22,7 +29,7 @@ export default function Transactions() {
         transactionService.getAllImports(),
         transactionService.getAllExports()
       ]);
-      
+
       const imports = importRes?.data || (Array.isArray(importRes) ? importRes : []);
       const exports = exportRes?.data || (Array.isArray(exportRes) ? exportRes : []);
 
@@ -60,10 +67,10 @@ export default function Transactions() {
       // Format lại hiển thị ngày tháng
       combined.forEach(item => {
         if (item.date) {
-           item.date = new Date(item.date).toLocaleDateString('vi-VN', {
-             day: '2-digit', month: '2-digit', year: 'numeric',
-             hour: '2-digit', minute: '2-digit'
-           });
+          item.date = new Date(item.date).toLocaleDateString('vi-VN', {
+            day: '2-digit', month: '2-digit', year: 'numeric',
+            hour: '2-digit', minute: '2-digit'
+          });
         }
       });
 
@@ -82,27 +89,27 @@ export default function Transactions() {
       try {
         const user = JSON.parse(userStr);
         role = user.role;
-      } catch (e) {}
+      } catch (e) { }
     }
-    
+
     if (role !== 'ADMIN') {
       toast.error('Lỗi: Chỉ quản lý mới có quyền DUYỆT phiếu!');
       return;
     }
-    
+
     setConfirmState({ isOpen: true, tx, action: 'APPROVE' });
   };
-  
+
   const openConfirmCancel = (tx) => setConfirmState({ isOpen: true, tx, action: 'CANCEL' });
   const closeConfirm = () => setConfirmState({ isOpen: false, tx: null, action: null });
 
   const executeAction = async () => {
     const { tx, action } = confirmState;
     if (!tx) return;
-    
+
     closeConfirm();
     const loadingToast = toast.loading(action === 'APPROVE' ? 'Đang duyệt phiếu...' : 'Đang hủy phiếu...');
-    
+
     try {
       const newStatus = action === 'APPROVE' ? 'COMPLETED' : 'CANCELLED';
       if (tx.type === 'IMPORT') {
@@ -110,8 +117,60 @@ export default function Transactions() {
       } else {
         await transactionService.updateExportStatus(tx.realId, newStatus);
       }
-      toast.success(action === 'APPROVE' ? 'Đã duyệt phiếu thành công!' : 'Đã hủy phiếu thành công!', { id: loadingToast });
+      let successMsg = '';
+      if (action === 'APPROVE') {
+        successMsg = tx.type === 'IMPORT'
+          ? 'Phiếu nhập đã được DUYỆT thành công. Hàng hóa đã được cộng vào tồn kho.'
+          : 'Phiếu xuất đã được DUYỆT thành công. Hệ thống đã trừ tồn kho.';
+      } else {
+        successMsg = tx.type === 'IMPORT'
+          ? 'Phiếu nhập đã được HỦY thành công.'
+          : 'Phiếu xuất đã được HỦY thành công.';
+      }
+      toast.success(successMsg, { id: loadingToast, duration: 4000 });
       fetchTransactions();
+
+      // Kích hoạt event để MainLayout kiểm tra tồn kho ngay lập tức
+      if (action === 'APPROVE') {
+        window.dispatchEvent(new Event('transaction_completed'));
+
+        // Kiểm tra cục bộ ngay lập tức để đảm bảo thông báo luôn hiện
+        if (tx.type === 'EXPORT' && tx.warehouseId) {
+          warehouseService.getStock(tx.warehouseId).then(stockRes => {
+            const stocks = stockRes.data || (Array.isArray(stockRes) ? stockRes : []);
+            const exportedProductIds = tx.details.map(d => d.productId);
+            const lowStockItems = stocks.filter(s =>
+              exportedProductIds.includes(s.productId) &&
+              s.minStockLevel !== undefined && s.minStockLevel !== null &&
+              s.quantity < s.minStockLevel
+            );
+
+            if (lowStockItems.length > 0) {
+              setTimeout(() => {
+                lowStockItems.forEach(item => {
+                  const currentQty = Number(item.quantity);
+                  const msg = currentQty === 0
+                    ? `Cảnh báo: Sản phẩm "${item.productName}" ĐÃ HẾT HÀNG!`
+                    : `Cảnh báo: Sản phẩm "${item.productName}" sắp hết hàng (chỉ còn ${currentQty})!`;
+
+                  toast.error(msg, {
+                    duration: 8000,
+                    icon: '⚠️',
+                    id: `low-stock-${item.warehouseId}-${item.productId}-${currentQty}`,
+                    style: {
+                      border: '1px solid #FFB020',
+                      padding: '16px',
+                      color: '#B7791F',
+                      backgroundColor: '#FFFAF0',
+                      maxWidth: '500px'
+                    }
+                  });
+                });
+              }, 500);
+            }
+          }).catch(err => console.error(err));
+        }
+      }
     } catch (err) {
       toast.error(err.response?.data?.message || (action === 'APPROVE' ? 'Lỗi khi duyệt phiếu' : 'Lỗi khi hủy phiếu'), { id: loadingToast });
     }
@@ -121,26 +180,47 @@ export default function Transactions() {
     fetchTransactions();
   }, []);
 
-  const totalPages = Math.ceil(transactions.length / ITEMS_PER_PAGE);
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const paginatedTransactions = transactions.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  // Reset page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterType, filterStatus]);
+
+  // Compute filtered transactions
+  const filteredTransactions = transactions.filter(tx => {
+    const searchLower = searchTerm.toLowerCase();
+    const matchesSearch =
+      (tx.id && tx.id.toLowerCase().includes(searchLower)) ||
+      (tx.person && tx.person.toLowerCase().includes(searchLower)) ||
+      (tx.partner && tx.partner.toLowerCase().includes(searchLower));
+
+    const matchesType = filterType === 'ALL' || tx.type === filterType;
+    const matchesStatus = filterStatus === 'ALL' || tx.status === filterStatus;
+
+    return matchesSearch && matchesType && matchesStatus;
+  });
+
+  const totalPages = Math.ceil(filteredTransactions.length / ITEMS_PER_PAGE);
+  // Ensure current page is valid after filtering
+  const safeCurrentPage = Math.min(currentPage, totalPages > 0 ? totalPages : 1);
+  const startIndex = (safeCurrentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedTransactions = filteredTransactions.slice(startIndex, startIndex + ITEMS_PER_PAGE);
 
   return (
     <div className="p-6 max-w-7xl mx-auto space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold text-primary">Giao dịch Nhập / Xuất</h1>
-          <p className="text-gray-500 text-sm mt-1">Quản lý phiếu nhập và xuất kho</p>
+
+          <h1 className="text-2xl font-semibold text-primary">Quản lý Nhập và Xuất kho</h1>
         </div>
         <div className="flex gap-3">
-          <button 
+          <button
             onClick={() => navigate('/import')}
             className="bg-white border text-green-600 border-green-200 px-4 py-2 flex items-center gap-2 rounded shadow-sm hover:bg-green-50 transition font-medium"
           >
             <Plus size={18} />
             Nhập hàng mới
           </button>
-          <button 
+          <button
             onClick={() => navigate('/export')}
             className="bg-primary text-white border border-primary px-4 py-2 flex items-center gap-2 rounded shadow-sm hover:bg-primary-light transition font-medium"
           >
@@ -151,20 +231,67 @@ export default function Transactions() {
       </div>
 
       <div className="bg-white border rounded-xl shadow-sm p-6 mt-4">
-        <h2 className="text-lg font-semibold text-gray-800">Giao dịch gần đây</h2>
-        <p className="text-gray-500 text-sm mb-6">Lịch sử nhập xuất kho mới nhất</p>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h2 className="text-lg font-semibold text-gray-800">Lịch sử nhập xuất kho</h2>
+
+          </div>
+        </div>
+
+        {/* Filter Bar */}
+        <div className="flex flex-col md:flex-row gap-4 mb-6">
+          <div className="relative flex-1">
+            <input
+              type="text"
+              placeholder="Tìm kiếm mã giao dịch, người phụ trách, đối tác..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition"
+            />
+            <Search className="absolute left-3.5 top-2.5 text-gray-400" size={18} />
+          </div>
+
+          <div className="flex gap-4">
+            <div className="relative">
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="pl-9 pr-8 py-2 border border-gray-200 rounded-lg appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer text-gray-700 transition"
+              >
+                <option value="ALL">Loại: Tất cả</option>
+                <option value="IMPORT">Nhập hàng</option>
+                <option value="EXPORT">Xuất hàng</option>
+              </select>
+              <Filter className="absolute left-3.5 top-2.5 text-gray-400" size={16} />
+            </div>
+
+            <div className="relative">
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="pl-9 pr-8 py-2 border border-gray-200 rounded-lg appearance-none bg-white focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary cursor-pointer text-gray-700 transition"
+              >
+                <option value="ALL">Trạng thái: Tất cả</option>
+                <option value="PENDING">Chờ duyệt</option>
+                <option value="COMPLETED">Hoàn thành</option>
+                <option value="CANCELLED">Đã hủy</option>
+              </select>
+              <Filter className="absolute left-3.5 top-2.5 text-gray-400" size={16} />
+            </div>
+          </div>
+        </div>
 
         <div className="overflow-x-auto">
           <table className="w-full border-collapse">
             <thead>
-              <tr className="border-b border-gray-100">
-                <th className="text-left py-4 px-2 text-gray-600 font-semibold w-[15%]">Mã giao dịch</th>
-                <th className="text-left py-4 px-2 text-gray-600 font-semibold w-[15%]">Ngày</th>
-                <th className="text-left py-4 px-2 text-gray-600 font-semibold w-[15%]">Loại</th>
+              <tr className="border-b border-gray-100 whitespace-nowrap">
+                <th className="text-left py-4 px-2 text-gray-600 font-semibold w-[10%]">Mã giao dịch</th>
+                <th className="text-left py-4 px-2 text-gray-600 font-semibold w-[12%]">Ngày</th>
+                <th className="text-left py-4 px-2 text-gray-600 font-semibold w-[10%]">Loại</th>
                 <th className="text-left py-4 px-2 text-gray-600 font-semibold w-[10%]">Trạng thái</th>
                 <th className="text-left py-4 px-2 text-gray-600 font-semibold w-[15%]">Người phụ trách</th>
                 <th className="text-left py-4 px-2 text-gray-600 font-semibold w-[15%]">Đối tác</th>
-                <th className="text-left py-4 px-2 text-gray-600 font-semibold w-[10%]">Số lượng</th>
+                <th className="text-left py-4 px-2 text-gray-600 font-semibold w-[8%]">Số lượng</th>
                 <th className="text-right py-4 px-2 text-gray-600 font-semibold w-[10%]">Tổng giá trị</th>
                 <th className="text-center py-4 px-2 text-gray-600 font-semibold w-[10%]">Thao tác</th>
               </tr>
@@ -174,7 +301,7 @@ export default function Transactions() {
                 <tr>
                   <td colSpan="7" className="text-center py-10">
                     <Loader2 className="animate-spin text-primary mx-auto mb-2" size={32} />
-                    <p className="text-gray-500">Đang tải lịch sử giao dịch...</p>
+                    <p className="text-gray-500">Đang tải lịch sử nhập xuất...</p>
                   </td>
                 </tr>
               ) : paginatedTransactions.length > 0 ? (
@@ -182,22 +309,22 @@ export default function Transactions() {
                   <tr key={idx} className="border-b border-gray-50 hover:bg-gray-50/50 transition">
                     <td className="py-4 px-2 font-medium text-gray-800">{tx.id}</td>
                     <td className="py-4 px-2 text-gray-600">{tx.date}</td>
-                    <td className="py-4 px-2">
+                    <td className="py-4 px-2 whitespace-nowrap">
                       {tx.type === 'IMPORT' ? (
-                        <span className="bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-semibold">Nhập hàng</span>
+                        <span className="text-green-600 px-2 py-1 text-xs font-semibold">Nhập hàng</span>
                       ) : (
-                        <span className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-xs font-semibold">Xuất hàng</span>
+                        <span className="text-blue-600 px-2 py-1 text-xs font-semibold">Xuất hàng</span>
                       )}
                     </td>
-                    <td className="py-4 px-2">
+                    <td className="py-4 px-2 whitespace-nowrap">
                       {tx.status === 'PENDING' ? (
-                        <span className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-xs font-semibold">Chờ duyệt</span>
+                        <span className="text-orange-600 px-2 py-1 text-xs font-semibold">Chờ duyệt</span>
                       ) : tx.status === 'COMPLETED' ? (
-                        <span className="bg-emerald-100 text-emerald-700 px-2 py-1 rounded text-xs font-semibold">Hoàn thành</span>
+                        <span className="text-emerald-600 px-2 py-1 text-xs font-semibold">Hoàn thành</span>
                       ) : tx.status === 'CANCELLED' ? (
-                        <span className="bg-red-100 text-red-700 px-2 py-1 rounded text-xs font-semibold">Đã hủy</span>
+                        <span className="text-red-600 px-2 py-1 text-xs font-semibold">Đã hủy</span>
                       ) : (
-                        <span className="bg-gray-100 text-gray-700 px-2 py-1 rounded text-xs font-semibold">{tx.status}</span>
+                        <span className="text-gray-600 px-2 py-1 text-xs font-semibold">{tx.status}</span>
                       )}
                     </td>
                     <td className="py-4 px-2 text-gray-600 truncate">{tx.person}</td>
@@ -207,28 +334,31 @@ export default function Transactions() {
                       ₫{tx.total.toLocaleString('vi-VN')}
                     </td>
                     <td className="py-4 px-2 text-center">
-                      <div className="flex items-center justify-center gap-2">
-                        <button 
+                      <div className="flex items-center justify-center gap-3">
+                        <button
                           onClick={() => setViewTx(tx)}
-                          className="bg-blue-50 text-blue-600 border border-blue-200 px-3 py-1 rounded text-xs font-medium hover:bg-blue-100 transition"
+                          className="text-gray-400 hover:text-blue-600 transition"
+                          title="Xem chi tiết"
                         >
-                          Xem
+                          <Eye size={18} />
                         </button>
                         {tx.status === 'PENDING' && (
-                          <button 
-                            onClick={() => openConfirmApprove(tx)}
-                            className="bg-primary text-white px-3 py-1 rounded text-xs font-medium hover:bg-primary-dark transition"
-                          >
-                            Duyệt
-                          </button>
-                        )}
-                        {tx.status === 'PENDING' && (
-                          <button 
-                            onClick={() => openConfirmCancel(tx)}
-                            className="bg-red-50 text-red-600 border border-red-200 px-3 py-1 rounded text-xs font-medium hover:bg-red-100 transition"
-                          >
-                            Hủy phiếu
-                          </button>
+                          <>
+                            <button
+                              onClick={() => openConfirmApprove(tx)}
+                              className="text-gray-400 hover:text-green-600 transition"
+                              title="Duyệt"
+                            >
+                              <Check size={18} />
+                            </button>
+                            <button
+                              onClick={() => openConfirmCancel(tx)}
+                              className="text-gray-400 hover:text-red-600 transition"
+                              title="Hủy phiếu"
+                            >
+                              <X size={18} />
+                            </button>
+                          </>
                         )}
                       </div>
                     </td>
@@ -242,22 +372,22 @@ export default function Transactions() {
             </tbody>
           </table>
         </div>
-        
+
         {/* Pagination */}
-        {!isLoading && transactions.length > 0 && (
-          <Pagination 
-            currentPage={currentPage}
+        {!isLoading && filteredTransactions.length > 0 && (
+          <Pagination
+            currentPage={safeCurrentPage}
             totalPages={totalPages}
             onPageChange={setCurrentPage}
           />
         )}
       </div>
 
-      <ConfirmModal 
+      <ConfirmModal
         isOpen={confirmState.isOpen}
         title={confirmState.action === 'APPROVE' ? 'Xác nhận Duyệt phiếu' : 'Xác nhận Hủy phiếu'}
         message={
-          confirmState.action === 'APPROVE' 
+          confirmState.action === 'APPROVE'
             ? `Bạn có chắc muốn duyệt phiếu ${confirmState.tx?.id}? Hàng hóa sẽ được cộng/trừ vào tồn kho ngay lập tức.`
             : `Bạn có chắc chắn muốn HỦY phiếu ${confirmState.tx?.id} không?`
         }
@@ -279,10 +409,10 @@ export default function Transactions() {
                 <p className="text-gray-500 text-sm mt-1">Mã phiếu: <span className="font-semibold text-gray-700">{viewTx.id}</span></p>
               </div>
               <button onClick={() => setViewTx(null)} className="text-gray-400 hover:text-gray-700 hover:bg-gray-100 p-2 rounded-full transition">
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
               </button>
             </div>
-            
+
             <div className="p-5 overflow-y-auto">
               <div className="grid grid-cols-2 gap-4 mb-6 bg-gray-50 p-4 rounded-lg border border-gray-100">
                 <div>
@@ -347,9 +477,9 @@ export default function Transactions() {
                 <span className="font-bold text-primary">₫{viewTx.total.toLocaleString('vi-VN')}</span>
               </div>
             </div>
-            
+
             <div className="p-4 border-t bg-gray-50 flex justify-end gap-3 rounded-b-xl">
-              <button 
+              <button
                 onClick={() => setViewTx(null)}
                 className="px-5 py-2 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 transition font-medium"
               >
@@ -357,7 +487,7 @@ export default function Transactions() {
               </button>
               {viewTx.status === 'PENDING' && (
                 <>
-                  <button 
+                  <button
                     onClick={() => {
                       setViewTx(null);
                       openConfirmCancel(viewTx);
@@ -366,7 +496,7 @@ export default function Transactions() {
                   >
                     Hủy phiếu
                   </button>
-                  <button 
+                  <button
                     onClick={() => {
                       setViewTx(null);
                       openConfirmApprove(viewTx);

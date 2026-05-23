@@ -4,10 +4,10 @@ import {
   LayoutDashboard,
   List,
   Package,
-  MapPin,
+  Warehouse,
   ArrowDownToLine,
   ArrowUpFromLine,
-  FileBarChart,
+  Boxes,
   Users,
   LogOut,
   KeyRound
@@ -20,9 +20,9 @@ export default function Sidebar() {
     { name: 'Tổng quan', path: '/', icon: <LayoutDashboard size={20} /> },
     { name: 'Danh mục', path: '/categories', icon: <List size={20} /> },
     { name: 'Sản phẩm', path: '/products', icon: <Package size={20} /> },
-    { name: 'Kho hàng', path: '/warehouses', icon: <MapPin size={20} /> },
-    { name: 'Nhập/Xuất', path: '/transactions', icon: <ArrowDownToLine size={20} /> },
-    { name: 'Báo cáo', path: '/reports', icon: <FileBarChart size={20} /> },
+    { name: 'Kho hàng', path: '/warehouses', icon: <Warehouse size={20} /> },
+    { name: 'Nhập/Xuất kho', path: '/transactions', icon: <ArrowDownToLine size={20} /> },
+    { name: 'Tồn kho', path: '/reports', icon: <Boxes size={20} /> },
   ];
 
   if (authService.getCurrentUser()?.role === 'ADMIN') {
@@ -86,7 +86,7 @@ export default function Sidebar() {
             <KeyRound size={20} />
             <span className="font-medium">Đổi mật khẩu</span>
           </button>
-          
+
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-2.5 rounded-lg text-blue-200 hover:text-white hover:bg-red-500/80 transition-colors"
@@ -97,9 +97,9 @@ export default function Sidebar() {
         </div>
       </div>
 
-      <ChangePasswordModal 
-        isOpen={isChangePasswordOpen} 
-        onClose={() => setIsChangePasswordOpen(false)} 
+      <ChangePasswordModal
+        isOpen={isChangePasswordOpen}
+        onClose={() => setIsChangePasswordOpen(false)}
       />
     </div>
   );
