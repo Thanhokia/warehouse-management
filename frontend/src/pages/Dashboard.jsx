@@ -279,7 +279,7 @@ export default function Dashboard() {
                   )
                 })}
                 <button
-                  onClick={() => navigate('/reports')}
+                  onClick={() => navigate('/inventory')}
                   className="w-full mt-4 py-2 text-sm text-blue-600 hover:text-blue-800 border border-blue-100 hover:bg-blue-50 rounded-lg transition font-medium"
                 >
                   Xem tất cả

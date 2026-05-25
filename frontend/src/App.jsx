@@ -9,6 +9,7 @@ import Warehouses from './pages/Warehouses';
 import Transactions from './pages/Transactions';
 import GoodsReceipt from './pages/GoodsReceipt';
 import GoodsIssue from './pages/GoodsIssue';
+import Inventory from './pages/Inventory';
 import Reports from './pages/Reports';
 import Users from './pages/Users';
 import Login from './pages/Login';
@@ -34,6 +35,7 @@ function App() {
           {/* Đổi url thành import và export theo yêu cầu */}
           <Route path="import" element={<GoodsReceipt />} />
           <Route path="export" element={<GoodsIssue />} />
+          <Route path="inventory" element={<Inventory />} />
           <Route path="reports" element={<Reports />} />
           <Route path="users" element={<Users />} />
         </Route>

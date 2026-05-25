@@ -10,7 +10,8 @@ import {
   Boxes,
   Users,
   LogOut,
-  KeyRound
+  KeyRound,
+  PieChart
 } from 'lucide-react';
 import authService from '../../services/authService';
 import ChangePasswordModal from '../ChangePasswordModal';
@@ -22,7 +23,8 @@ export default function Sidebar() {
     { name: 'Sản phẩm', path: '/products', icon: <Package size={20} /> },
     { name: 'Kho hàng', path: '/warehouses', icon: <Warehouse size={20} /> },
     { name: 'Nhập/Xuất kho', path: '/transactions', icon: <ArrowDownToLine size={20} /> },
-    { name: 'Tồn kho', path: '/reports', icon: <Boxes size={20} /> },
+    { name: 'Tồn kho', path: '/inventory', icon: <Boxes size={20} /> },
+    { name: 'Báo cáo - Thống kê', path: '/reports', icon: <PieChart size={20} /> },
   ];
 
   if (authService.getCurrentUser()?.role === 'ADMIN') {

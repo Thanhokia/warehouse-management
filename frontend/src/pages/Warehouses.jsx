@@ -6,6 +6,7 @@ import authService from '../services/authService';
 import activityService from '../services/activityService';
 import inventoryCheckService from '../services/inventoryCheckService';
 import ConfirmModal from '../components/ConfirmModal';
+import Pagination from '../components/common/Pagination';
 
 export default function Warehouses() {
   const currentUser = authService.getCurrentUser();
@@ -38,6 +39,12 @@ export default function Warehouses() {
   const [checkSearch, setCheckSearch] = useState('');
   const [checkFilterTab, setCheckFilterTab] = useState('all'); // all, unchecked, diff
 
+  const [checkCurrentPage, setCheckCurrentPage] = useState(1);
+  const CHECKS_PER_PAGE = 10;
+
+  const [stockCurrentPage, setStockCurrentPage] = useState(1);
+  const STOCK_PER_PAGE = 10;
+
   const fetchWarehouses = async () => {
     setIsLoading(true);
     try {
@@ -67,6 +74,17 @@ export default function Warehouses() {
     fetchWarehouses();
     fetchInventoryChecks();
   }, []);
+
+  // Reset page when checks change
+  useEffect(() => {
+    setCheckCurrentPage(1);
+  }, [inventoryChecks.length]);
+
+  const checkTotalPages = Math.ceil(inventoryChecks.length / CHECKS_PER_PAGE);
+  const paginatedChecks = inventoryChecks.slice(
+    (checkCurrentPage - 1) * CHECKS_PER_PAGE,
+    checkCurrentPage * CHECKS_PER_PAGE
+  );
 
   const filteredWarehouses = warehouses.filter(w =>
     w.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -343,6 +361,17 @@ export default function Warehouses() {
     return true;
   });
 
+  // Pagination for stock list
+  useEffect(() => {
+    setStockCurrentPage(1);
+  }, [checkSearch, checkFilterTab, selectedCheckWarehouseId]);
+
+  const stockTotalPages = Math.ceil(filteredStock.length / STOCK_PER_PAGE);
+  const paginatedStock = filteredStock.slice(
+    (stockCurrentPage - 1) * STOCK_PER_PAGE,
+    stockCurrentPage * STOCK_PER_PAGE
+  );
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -497,7 +526,7 @@ export default function Warehouses() {
                 </tr>
               </thead>
               <tbody>
-                {inventoryChecks.length > 0 ? inventoryChecks.map(check => (
+                {paginatedChecks.length > 0 ? paginatedChecks.map(check => (
                   <tr key={check.id} className="border-b hover:bg-gray-50 transition">
                     <td className="py-3 px-4 font-semibold text-gray-900">{check.code}</td>
                     <td className="py-3 px-4 text-gray-800">{check.warehouseName}</td>
@@ -546,6 +575,16 @@ export default function Warehouses() {
               </tbody>
             </table>
           </div>
+          
+          {inventoryChecks.length > 0 && (
+            <div className="mt-4">
+              <Pagination
+                currentPage={checkCurrentPage}
+                totalPages={checkTotalPages}
+                onPageChange={setCheckCurrentPage}
+              />
+            </div>
+          )}
         </div>
       ) : (
         <div className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden flex flex-col">
@@ -664,7 +703,7 @@ export default function Warehouses() {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredStock.length > 0 ? filteredStock.map(item => {
+                    {paginatedStock.length > 0 ? paginatedStock.map(item => {
                       const actualQty = inventoryAdjustments[item.id]?.actualQuantity ?? '';
                       const isEditing = inventoryAdjustments[item.id]?.isChecked && actualQty !== '';
                       const diff = isEditing ? parseInt(actualQty) - item.quantity : 0;
@@ -724,6 +763,16 @@ export default function Warehouses() {
                   </tbody>
                 </table>
               </div>
+              
+              {filteredStock.length > 0 && (
+                <div className="mt-4">
+                  <Pagination
+                    currentPage={stockCurrentPage}
+                    totalPages={stockTotalPages}
+                    onPageChange={setStockCurrentPage}
+                  />
+                </div>
+              )}
             </div>
           ) : selectedCheckWarehouseId ? (
             <div className="text-center py-12 text-gray-500 flex flex-col items-center">

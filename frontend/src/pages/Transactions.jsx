@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Plus, Minus, Loader2, Eye, Search, Filter, Check, X } from 'lucide-react';
+import { Plus, Minus, Loader2, Eye, Search, Filter, Check, X, FileSpreadsheet } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 import transactionService from '../services/transactionService';
 import warehouseService from '../services/warehouseService';
 import ConfirmModal from '../components/ConfirmModal';
 import Pagination from '../components/common/Pagination';
+import { exportToExcel } from '../utils/exportUtils';
 
 export default function Transactions() {
   const navigate = useNavigate();
@@ -185,6 +186,19 @@ export default function Transactions() {
     setCurrentPage(1);
   }, [searchTerm, filterType, filterStatus]);
 
+  const handleExportExcel = () => {
+    const data = filteredTransactions.map(item => ({
+      'Mã phiếu': item.id,
+      'Ngày tạo': item.rawDate.toLocaleDateString('vi-VN') + ' ' + item.rawDate.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' }),
+      'Loại': item.type === 'IMPORT' ? 'Nhập kho' : 'Xuất kho',
+      'Số mục': item.qtyDesc,
+      'Trạng thái': item.status === 'PENDING' ? 'Chờ duyệt' : item.status === 'APPROVED' ? 'Đã duyệt' : item.status === 'COMPLETED' ? 'Hoàn thành' : 'Đã hủy',
+      'Người tạo': item.person,
+      'Đối tác': item.partner
+    }));
+    exportToExcel(data, `LichSuGiaoDich_${new Date().getTime()}`);
+  };
+
   // Compute filtered transactions
   const filteredTransactions = transactions.filter(tx => {
     const searchLower = searchTerm.toLowerCase();
@@ -212,7 +226,15 @@ export default function Transactions() {
 
           <h1 className="text-2xl font-semibold text-primary">Quản lý Nhập và Xuất kho</h1>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2">
+          <button
+            onClick={handleExportExcel}
+            disabled={filteredTransactions.length === 0}
+            className="flex items-center gap-2 px-3 py-2 bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 rounded-lg font-medium transition-colors shadow-sm disabled:opacity-50 text-sm"
+          >
+            <FileSpreadsheet size={16} />
+            <span className="hidden sm:inline">Excel</span>
+          </button>
           <button
             onClick={() => navigate('/import')}
             className="bg-white border text-green-600 border-green-200 px-4 py-2 flex items-center gap-2 rounded shadow-sm hover:bg-green-50 transition font-medium"
