@@ -4,7 +4,7 @@ services:
     container_name: warehouse_db
     environment:
       MYSQL_DATABASE: warehouse_management
-      MYSQL_ROOT_PASSWORD: root
+      MYSQL_ROOT_PASSWORD: ${DB_PASSWORD:-root}
     ports:
       - "3306:3306"
     volumes:
@@ -24,7 +24,9 @@ services:
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/warehouse_management
       - SPRING_DATASOURCE_USERNAME=root
-      - SPRING_DATASOURCE_PASSWORD=root
+      - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-root}
+      - JWT_SECRET=${JWT_SECRET:-warehouse-management-secret-key-32-chars-min}
     depends_on:
       db:
         condition: service_healthy
