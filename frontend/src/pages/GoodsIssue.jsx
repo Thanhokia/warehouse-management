@@ -33,20 +33,21 @@ export default function GoodsIssue() {
     fetchInitData();
   }, []);
 
-  const getUserRole = () => {
+  const getUserData = () => {
     const userStr = sessionStorage.getItem('user');
     if (userStr) {
-      try { return JSON.parse(userStr).role; } catch (e) { }
+      try { return JSON.parse(userStr); } catch (e) { }
     }
-    return 'STAFF';
+    return { role: 'STAFF', name: 'Nhân viên' };
   };
-  const currentUserRole = getUserRole();
+  const currentUser = getUserData();
+  const currentUserRole = currentUser.role;
 
   // Header form
   const [issueData, setIssueData] = useState({
     issueNo: `PX${Date.now().toString().slice(-6)}`,
     date: new Date().toISOString().split('T')[0],
-    personInCharge: 'Nguyễn Văn A',
+    personInCharge: currentUser.name || 'Nhân viên',
     recipient: '',
     warehouseId: '',
     reason: ''

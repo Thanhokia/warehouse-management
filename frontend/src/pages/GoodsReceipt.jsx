@@ -49,20 +49,21 @@ export default function GoodsReceipt() {
     fetchData();
   }, []);
 
-  const getUserRole = () => {
+  const getUserData = () => {
     const userStr = sessionStorage.getItem('user');
     if (userStr) {
-      try { return JSON.parse(userStr).role; } catch (e) { }
+      try { return JSON.parse(userStr); } catch (e) { }
     }
-    return 'STAFF';
+    return { role: 'STAFF', name: 'Nhân viên' };
   };
-  const currentUserRole = getUserRole();
+  const currentUser = getUserData();
+  const currentUserRole = currentUser.role;
 
   // Header form
   const [receiptData, setReceiptData] = useState({
     receiptNo: `PN${Date.now().toString().slice(-6)}`,
     date: new Date().toISOString().split('T')[0],
-    personInCharge: 'Nguyễn Văn A',
+    personInCharge: currentUser.name || 'Nhân viên',
     supplier: '',
     warehouseId: '',
     notes: ''

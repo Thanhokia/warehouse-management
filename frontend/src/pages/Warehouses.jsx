@@ -266,7 +266,6 @@ export default function Warehouses() {
   const handleCloseView = () => {
     setViewingWarehouse(null);
     setWarehouseStock([]);
-    setIsCheckingInventory(false);
     setInventoryAdjustments({});
   };
 
