@@ -239,7 +239,8 @@ export default function Users() {
 
         {/* Table View */}
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+          <div className="overflow-x-auto w-full">
+<table className="w-full border-collapse">
             <thead>
               <tr className="bg-gray-50/50">
                 <th className="text-left py-3 px-6 text-gray-600 font-medium">Họ tên</th>
@@ -322,6 +323,7 @@ export default function Users() {
               )}
             </tbody>
           </table>
+</div>
         </div>
       </div>
 

@@ -11,12 +11,13 @@ import {
   Users,
   LogOut,
   KeyRound,
-  PieChart
+  PieChart,
+  X
 } from 'lucide-react';
 import authService from '../../services/authService';
 import ChangePasswordModal from '../ChangePasswordModal';
 
-export default function Sidebar() {
+export default function Sidebar({ isOpen, setIsOpen }) {
   const menuItems = [
     { name: 'Tổng quan', path: '/', icon: <LayoutDashboard size={20} /> },
     { name: 'Danh mục', path: '/categories', icon: <List size={20} /> },
@@ -41,14 +42,20 @@ export default function Sidebar() {
   };
 
   return (
-    <div className="w-64 bg-primary text-white min-h-screen fixed left-0 top-0 z-10 flex flex-col shadow-xl">
-      <div className="p-6 text-center border-b border-primary-light/30 flex flex-col items-center">
+    <div className={`w-64 bg-primary text-white h-screen fixed left-0 top-0 z-40 flex flex-col shadow-xl transform transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0`}>
+      <div className="p-6 text-center border-b border-primary-light/30 flex flex-col items-center relative">
+        <button 
+          className="absolute top-4 right-4 lg:hidden text-white/70 hover:text-white"
+          onClick={() => setIsOpen && setIsOpen(false)}
+        >
+          <X size={24} />
+        </button>
         <img src="/logo.png.jpg" alt="Zô Zô Quán" className="w-20 h-20 object-cover rounded-full border-2 border-white/20 shadow-md mb-3 bg-red-800" />
         <h2 className="text-xl font-bold uppercase tracking-wider">ZôZô Quán</h2>
         <p className="text-sm text-blue-200 mt-1">Hệ thống quản lý kho</p>
       </div>
 
-      <nav className="flex-1 py-6">
+      <nav className="flex-1 py-6 overflow-y-auto custom-scrollbar">
         <ul className="space-y-2 px-4">
           {menuItems.map((item) => (
             <li key={item.path}>
@@ -60,6 +67,7 @@ export default function Sidebar() {
                     : 'text-blue-100 hover:bg-white/10 hover:text-white'
                   }`
                 }
+                onClick={() => setIsOpen && setIsOpen(false)}
               >
                 {item.icon}
                 {item.name}

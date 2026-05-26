@@ -267,7 +267,8 @@ export default function Products() {
 
         {/* Table */}
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+          <div className="overflow-x-auto w-full">
+<table className="w-full border-collapse">
             <thead>
               <tr className="bg-gray-50 border-b">
                 <th className="text-left py-3 px-4 text-gray-600 font-medium">Mã SP</th>
@@ -339,6 +340,7 @@ export default function Products() {
               )}
             </tbody>
           </table>
+</div>
         </div>
         
         {/* Pagination */}

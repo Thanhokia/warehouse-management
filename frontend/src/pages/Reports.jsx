@@ -567,7 +567,8 @@ export default function Reports() {
           <div className="p-4 border-b border-gray-100 bg-gray-50/50">
             <h3 className="font-semibold text-gray-800">Top xuất nhiều nhất</h3>
           </div>
-          <table className="w-full text-sm text-left">
+          <div className="overflow-x-auto w-full">
+<table className="w-full text-sm text-left">
             <thead className="bg-gray-50 text-gray-500 border-b">
               <tr>
                 <th className="py-3 px-4 font-medium">Mã SP</th>
@@ -589,13 +590,15 @@ export default function Reports() {
               )}
             </tbody>
           </table>
+</div>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-4 border-b border-gray-100 bg-gray-50/50">
             <h3 className="font-semibold text-gray-800">Top tồn kho cao nhất</h3>
           </div>
-          <table className="w-full text-sm text-left">
+          <div className="overflow-x-auto w-full">
+<table className="w-full text-sm text-left">
             <thead className="bg-gray-50 text-gray-500 border-b">
               <tr>
                 <th className="py-3 px-4 font-medium">Mã SP</th>
@@ -617,13 +620,15 @@ export default function Reports() {
               )}
             </tbody>
           </table>
+</div>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
           <div className="p-4 border-b border-gray-100 bg-gray-50/50">
             <h3 className="font-semibold text-gray-800">Tồn kho thấp (dưới mức)</h3>
           </div>
-          <table className="w-full text-sm text-left">
+          <div className="overflow-x-auto w-full">
+<table className="w-full text-sm text-left">
             <thead className="bg-gray-50 text-gray-500 border-b">
               <tr>
                 <th className="py-3 px-4 font-medium">Mã SP</th>
@@ -645,6 +650,7 @@ export default function Reports() {
               )}
             </tbody>
           </table>
+</div>
         </div>
       </div>
 
@@ -657,7 +663,8 @@ export default function Reports() {
           </span>
         </div>
         <div className="overflow-x-auto max-h-[500px]">
-          <table className="w-full text-sm text-left">
+          <div className="overflow-x-auto w-full">
+<table className="w-full text-sm text-left">
             <thead className="bg-gray-50 text-gray-500 border-b sticky top-0 shadow-sm z-10">
               <tr>
                 <th className="py-3 px-4 font-medium whitespace-nowrap">Mã SP</th>
@@ -683,6 +690,7 @@ export default function Reports() {
               )}
             </tbody>
           </table>
+</div>
         </div>
       </div>
     </div>

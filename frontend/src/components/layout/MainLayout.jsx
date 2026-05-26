@@ -1,5 +1,6 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Outlet } from 'react-router-dom';
+import { Menu } from 'lucide-react';
 import Sidebar from './Sidebar';
 import reportService from '../../services/reportService';
 import toast from 'react-hot-toast';
@@ -65,10 +66,32 @@ export default function MainLayout() {
     };
   }, []);
 
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+
   return (
-      <div className="min-h-screen bg-bg flex">
-      <Sidebar />
-      <div className="flex-1 ml-64 p-4 lg:p-8">
+    <div className="min-h-screen bg-bg flex flex-col lg:flex-row">
+      {/* Mobile Topbar */}
+      <div className="lg:hidden bg-primary text-white p-4 flex justify-between items-center shadow-md z-20">
+        <div className="flex items-center gap-3">
+          <img src="/logo.png.jpg" alt="Logo" className="w-8 h-8 rounded-full border border-white/20" />
+          <h2 className="text-lg font-bold uppercase tracking-wider">ZôZô Quán</h2>
+        </div>
+        <button onClick={() => setIsSidebarOpen(true)} className="p-1 focus:outline-none">
+          <Menu size={24} />
+        </button>
+      </div>
+
+      <Sidebar isOpen={isSidebarOpen} setIsOpen={setIsSidebarOpen} />
+      
+      {/* Overlay for mobile when sidebar is open */}
+      {isSidebarOpen && (
+        <div 
+          className="fixed inset-0 bg-black/50 z-30 lg:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+        />
+      )}
+
+      <div className="flex-1 lg:ml-64 p-4 lg:p-8 w-full overflow-x-hidden">
         <Outlet />
       </div>
     </div>

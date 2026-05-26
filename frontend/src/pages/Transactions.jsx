@@ -304,7 +304,8 @@ export default function Transactions() {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+          <div className="overflow-x-auto w-full">
+<table className="w-full border-collapse">
             <thead>
               <tr className="border-b border-gray-100 whitespace-nowrap">
                 <th className="text-left py-4 px-2 text-gray-600 font-semibold w-[10%]">Mã giao dịch</th>
@@ -393,6 +394,7 @@ export default function Transactions() {
               )}
             </tbody>
           </table>
+</div>
         </div>
 
         {/* Pagination */}
@@ -467,7 +469,8 @@ export default function Transactions() {
 
               <h3 className="font-semibold text-gray-800 mb-3 border-b pb-2">Danh sách hàng hóa</h3>
               <div className="overflow-x-auto border rounded-lg">
-                <table className="w-full border-collapse text-sm">
+                <div className="overflow-x-auto w-full">
+<table className="w-full border-collapse text-sm">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="text-left py-3 px-4 font-medium text-gray-600">Mã SP</th>
@@ -493,6 +496,7 @@ export default function Transactions() {
                     )}
                   </tbody>
                 </table>
+</div>
               </div>
               <div className="mt-4 flex justify-end text-lg">
                 <span className="text-gray-600 mr-3">Tổng cộng:</span>

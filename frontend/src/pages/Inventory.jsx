@@ -223,7 +223,8 @@ export default function Inventory() {
 
         {/* Table */}
         <div className="overflow-x-auto p-5">
-          <table className="w-full border-collapse">
+          <div className="overflow-x-auto w-full">
+<table className="w-full border-collapse">
             <thead>
               <tr className="bg-gray-50 border-y">
                 <th className="text-left py-3 px-4 text-gray-600 font-medium whitespace-nowrap">Mã SP</th>
@@ -299,6 +300,7 @@ export default function Inventory() {
               )}
             </tbody>
           </table>
+</div>
         </div>
 
         {/* Pagination */}

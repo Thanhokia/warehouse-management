@@ -426,7 +426,8 @@ export default function GoodsIssue() {
         <h2 className="text-lg font-medium text-primary mb-4 border-b pb-2">Hàng hóa xuất</h2>
 
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+          <div className="overflow-x-auto w-full">
+<table className="w-full border-collapse">
             <thead>
               <tr className="bg-gray-50 border-b">
                 <th className="text-left py-3 px-4 text-gray-600 font-medium w-4/12">Sản phẩm <span className="text-red-500">*</span></th>
@@ -503,6 +504,7 @@ export default function GoodsIssue() {
               })}
             </tbody>
           </table>
+</div>
         </div>
 
         <div className="flex mt-4">

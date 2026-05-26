@@ -418,7 +418,8 @@ export default function Warehouses() {
 
         {/* Grid/Table View */}
         <div className="overflow-x-auto">
-          <table className="w-full border-collapse">
+          <div className="overflow-x-auto w-full">
+<table className="w-full border-collapse">
             <thead>
               <tr className="bg-gray-50 border-b">
                 <th className="text-left py-3 px-4 text-gray-600 font-medium">Mã Kho</th>
@@ -498,6 +499,7 @@ export default function Warehouses() {
               )}
             </tbody>
           </table>
+</div>
         </div>
         </div>
       ) : !isCreatingCheck ? (
@@ -514,7 +516,8 @@ export default function Warehouses() {
           </div>
           
           <div className="overflow-x-auto">
-            <table className="w-full border-collapse">
+            <div className="overflow-x-auto w-full">
+<table className="w-full border-collapse">
               <thead>
                 <tr className="bg-gray-50 border-b">
                   <th className="text-left py-3 px-4 text-gray-600 font-medium">Mã phiếu</th>
@@ -573,6 +576,7 @@ export default function Warehouses() {
                 )}
               </tbody>
             </table>
+</div>
           </div>
           
           {inventoryChecks.length > 0 && (
@@ -689,7 +693,8 @@ export default function Warehouses() {
 
               {/* Table */}
               <div className="bg-white border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                <table className="w-full border-collapse">
+                <div className="overflow-x-auto w-full">
+<table className="w-full border-collapse">
                   <thead>
                     <tr className="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 uppercase tracking-wider">
                       <th className="text-left py-4 px-6 font-bold">Mã SP</th>
@@ -761,6 +766,7 @@ export default function Warehouses() {
                     )}
                   </tbody>
                 </table>
+</div>
               </div>
               
               {filteredStock.length > 0 && (
@@ -953,7 +959,8 @@ export default function Warehouses() {
                       </h3>
                     </div>
                     <div className="bg-white border rounded">
-                      <table className="w-full border-collapse">
+                      <div className="overflow-x-auto w-full">
+<table className="w-full border-collapse">
                         <thead>
                           <tr className="bg-gray-50 border-b text-sm">
                             <th className="text-left py-2 px-3 text-gray-600 font-medium">Mã SP</th>
@@ -979,6 +986,7 @@ export default function Warehouses() {
                           )}
                         </tbody>
                       </table>
+</div>
                     </div>
                   </div>
 
@@ -1024,7 +1032,8 @@ export default function Warehouses() {
               </div>
               
               <div className="border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-                <table className="w-full text-left border-collapse">
+                <div className="overflow-x-auto w-full">
+<table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-gray-50 border-b text-xs font-semibold text-gray-500 uppercase">
                       <th className="p-3">Mã SP</th>
@@ -1063,6 +1072,7 @@ export default function Warehouses() {
                     )}
                   </tbody>
                 </table>
+</div>
               </div>
             </div>
             
