@@ -438,7 +438,7 @@ export default function Reports() {
             className="border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary border px-3 py-1.5"
           >
             <option value="">Tất cả kho hàng</option>
-            {warehouses.map(w => (
+            {warehouses.filter(w => !w.name.includes('_deleted_') && w.isActive !== false).map(w => (
               <option key={w.id} value={w.id}>{w.name}</option>
             ))}
           </select>
@@ -452,7 +452,7 @@ export default function Reports() {
             className="border-gray-300 rounded-lg text-sm focus:ring-primary focus:border-primary border px-3 py-1.5"
           >
             <option value="">Tất cả danh mục</option>
-            {categories.map(c => (
+            {categories.filter(c => !c.name.includes('_deleted_') && c.isActive !== false).map(c => (
               <option key={c.id} value={c.id}>{c.name}</option>
             ))}
           </select>

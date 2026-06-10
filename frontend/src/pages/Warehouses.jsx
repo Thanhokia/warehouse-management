@@ -27,6 +27,7 @@ export default function Warehouses() {
   const [error, setError] = useState('');
 
   const [confirmState, setConfirmState] = useState({ isOpen: false, warehouse: null });
+  const [largeDiffConfirmState, setLargeDiffConfirmState] = useState({ isOpen: false, request: null, count: 0 });
 
   const [activeTab, setActiveTab] = useState('list');
   const [isCreatingCheck, setIsCreatingCheck] = useState(false);
@@ -175,17 +176,22 @@ export default function Warehouses() {
 
   const handleCreateNewCheck = () => {
     setIsCreatingCheck(true);
-    if (warehouses.length > 0 && !selectedCheckWarehouseId) {
-      handleSelectCheckWarehouse({ target: { value: warehouses[0].id } });
-    }
+    setSelectedCheckWarehouseId('');
+    setWarehouseStock([]);
   };
 
   const handleAdjustmentChange = (itemId, field, value) => {
+    let finalValue = value;
+    if (field === 'actualQuantity' && value !== '') {
+      const num = parseInt(value, 10);
+      if (num < 0) finalValue = '0';
+    }
+
     setInventoryAdjustments(prev => ({
       ...prev,
       [itemId]: {
         ...prev[itemId],
-        [field]: value,
+        [field]: finalValue,
         isChecked: true
       }
     }));
@@ -219,16 +225,54 @@ export default function Warehouses() {
       return;
     }
 
+    const largeDiscrepancyItems = [];
+    const missingReasonItems = [];
+
+    details.forEach(d => {
+      const diff = Math.abs(d.actualQuantity - d.originalQuantity);
+      const isLarge = diff >= 10 || (d.originalQuantity > 0 && diff / d.originalQuantity >= 0.2);
+      
+      if (isLarge) {
+        largeDiscrepancyItems.push(d);
+        if (d.reason === 'Kiểm kê kho định kỳ' || d.reason.trim().length < 5) {
+          missingReasonItems.push(d);
+        }
+      }
+    });
+
+    if (missingReasonItems.length > 0) {
+      toast.error('Có sản phẩm chênh lệch quá lớn. Vui lòng ghi rõ lý do chi tiết ở cột Ghi chú!');
+      return;
+    }
+
+    if (largeDiscrepancyItems.length > 0) {
+      setLargeDiffConfirmState({ 
+        isOpen: true, 
+        request: { warehouseId: parseInt(selectedCheckWarehouseId), details: details }, 
+        count: largeDiscrepancyItems.length 
+      });
+      return;
+    }
+
+    await executeSaveInventoryCheck({ warehouseId: parseInt(selectedCheckWarehouseId), details: details });
+  };
+
+  const executeSaveInventoryCheck = async (request) => {
     setIsSavingInventory(true);
     try {
-      const request = {
-        warehouseId: parseInt(selectedCheckWarehouseId),
-        details: details
-      };
-      
-      await inventoryCheckService.create(request);
+      const res = await inventoryCheckService.create(request);
 
-      toast.success('Đã lưu phiếu kiểm kê! Vui lòng chờ Admin duyệt.');
+      if (isUserAdmin) {
+        const createdCheckId = res?.data?.id || res?.id;
+        if (createdCheckId) {
+          await inventoryCheckService.approve(createdCheckId);
+          toast.success('Đã lưu và tự động duyệt phiếu kiểm kê!');
+        } else {
+          toast.success('Đã lưu phiếu kiểm kê!');
+        }
+      } else {
+        toast.success('Đã lưu phiếu kiểm kê! Vui lòng chờ Admin duyệt.');
+      }
       setIsCreatingCheck(false);
       setWarehouseStock([]);
       setSelectedCheckWarehouseId('');
@@ -238,6 +282,7 @@ export default function Warehouses() {
       console.error(err);
     } finally {
       setIsSavingInventory(false);
+      setLargeDiffConfirmState({ isOpen: false, request: null, count: 0 });
     }
   };
 
@@ -613,7 +658,8 @@ export default function Warehouses() {
                   onChange={handleSelectCheckWarehouse}
                   className="bg-slate-700 text-white border border-slate-500 rounded-lg px-3 py-1.5 focus:ring-2 focus:ring-indigo-400 focus:outline-none text-sm font-medium outline-none appearance-none cursor-pointer hover:bg-slate-600 transition"
                 >
-                  {warehouses.map(w => (
+                  <option value="" disabled>-- Chọn kho kiểm kê --</option>
+                  {warehouses.filter(w => !w.name.includes('_deleted_') && w.isActive !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.code} - {w.name}</option>
                   ))}
                 </select>
@@ -957,6 +1003,19 @@ export default function Warehouses() {
                         <Database size={18} className="text-blue-600" />
                         Tình trạng Tồn kho ({warehouseStock.length} sản phẩm)
                       </h3>
+                      <button
+                        onClick={() => {
+                          const wId = viewingWarehouse.id;
+                          handleCloseView();
+                          setActiveTab('check');
+                          setIsCreatingCheck(true);
+                          handleSelectCheckWarehouse({ target: { value: wId } });
+                        }}
+                        className="px-4 py-1.5 bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-100 font-medium transition flex items-center gap-2 text-sm shadow-sm"
+                      >
+                        <ClipboardCheck size={16} />
+                        Kiểm kê kho
+                      </button>
                     </div>
                     <div className="bg-white border rounded">
                       <div className="overflow-x-auto w-full">
@@ -998,7 +1057,7 @@ export default function Warehouses() {
               )}
             </div>
 
-            <div className="p-4 border-t flex justify-end bg-gray-50 rounded-b-lg shrink-0">
+            <div className="p-4 border-t flex justify-end gap-3 bg-gray-50 rounded-b-lg shrink-0">
               <button
                 onClick={handleCloseView}
                 className="px-6 py-2 border border-gray-300 bg-white text-gray-700 rounded hover:bg-gray-100 font-medium transition"
@@ -1116,6 +1175,17 @@ export default function Warehouses() {
         onConfirm={handleDelete}
         onCancel={closeConfirm}
         confirmText="Xóa kho"
+      />
+
+      <ConfirmModal
+        isOpen={largeDiffConfirmState.isOpen}
+        title="Cảnh báo chênh lệch lớn"
+        message={`Có ${largeDiffConfirmState.count} sản phẩm chênh lệch tồn kho quá lớn. Bạn có chắc chắn muốn lưu phiếu kiểm kê này không?`}
+        onConfirm={() => executeSaveInventoryCheck(largeDiffConfirmState.request)}
+        onCancel={() => setLargeDiffConfirmState({ isOpen: false, request: null, count: 0 })}
+        confirmText="Vẫn lưu phiếu"
+        cancelText="Kiểm tra lại"
+        confirmColor="bg-primary hover:bg-primary-dark text-white"
       />
     </div>
   );

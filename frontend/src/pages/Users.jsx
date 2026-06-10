@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, Edit2, Trash2, X, Shield, ShieldCheck, Mail, User, Loader2, Activity, CheckCircle2, Info, AlertCircle, Clock, Filter } from 'lucide-react';
+import { Search, Plus, Edit2, Trash2, X, Shield, ShieldCheck, Mail, User, Loader2, Activity, CheckCircle2, Info, AlertCircle, Clock, Filter, Calendar } from 'lucide-react';
 import userService from '../services/userService';
 import activityService from '../services/activityService';
 import authService from '../services/authService';
@@ -17,6 +17,8 @@ export default function Users() {
   // Activity filter states
   const [activitySearchTerm, setActivitySearchTerm] = useState('');
   const [activityFilterStatus, setActivityFilterStatus] = useState('ALL');
+  const [activityFilterTime, setActivityFilterTime] = useState('ALL');
+  const [activityFilterCustomDate, setActivityFilterCustomDate] = useState('');
 
   // Lấy thông tin user thực tế đang đăng nhập (để validate không cho xóa chính mình)
   const currentUser = authService.getCurrentUser() || {};
@@ -98,7 +100,7 @@ export default function Users() {
   // Reset activity page when filters change
   useEffect(() => {
     setCurrentActivityPage(1);
-  }, [activitySearchTerm, activityFilterStatus]);
+  }, [activitySearchTerm, activityFilterStatus, activityFilterTime, activityFilterCustomDate]);
 
   const getActivityStyling = (status) => {
     switch (status) {
@@ -189,7 +191,29 @@ export default function Users() {
 
     const matchesStatus = activityFilterStatus === 'ALL' || activity.status === activityFilterStatus;
 
-    return matchesSearch && matchesStatus;
+    let matchesTime = true;
+    if (activityFilterTime !== 'ALL') {
+      const activityDate = new Date(activity.createdAt);
+      const now = new Date();
+      if (activityFilterTime === 'TODAY') {
+        matchesTime = activityDate.toDateString() === now.toDateString();
+      } else if (activityFilterTime === '7_DAYS') {
+        const sevenDaysAgo = new Date();
+        sevenDaysAgo.setDate(now.getDate() - 7);
+        matchesTime = activityDate >= sevenDaysAgo;
+      } else if (activityFilterTime === '30_DAYS') {
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(now.getDate() - 30);
+        matchesTime = activityDate >= thirtyDaysAgo;
+      } else if (activityFilterTime === 'THIS_MONTH') {
+        matchesTime = activityDate.getMonth() === now.getMonth() && activityDate.getFullYear() === now.getFullYear();
+      } else if (activityFilterTime === 'CUSTOM' && activityFilterCustomDate) {
+        const customDate = new Date(activityFilterCustomDate);
+        matchesTime = activityDate.toDateString() === customDate.toDateString();
+      }
+    }
+
+    return matchesSearch && matchesStatus && matchesTime;
   });
 
   const totalActivityPages = Math.ceil(filteredActivities.length / ACTIVITIES_PER_PAGE);
@@ -348,6 +372,33 @@ export default function Users() {
                 className="w-full sm:w-56 pl-9 pr-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary transition"
               />
               <Search className="absolute left-3 top-2 text-gray-400" size={14} />
+            </div>
+
+            <div className="flex gap-2 items-center">
+              <div className="relative flex-shrink-0">
+                <select
+                  value={activityFilterTime}
+                  onChange={(e) => setActivityFilterTime(e.target.value)}
+                  className="w-full sm:w-40 pl-9 pr-8 py-1.5 text-sm border border-gray-200 rounded-lg appearance-none bg-white focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary cursor-pointer text-gray-700 transition"
+                >
+                  <option value="ALL">Tất cả thời gian</option>
+                  <option value="TODAY">Hôm nay</option>
+                  <option value="7_DAYS">7 ngày qua</option>
+                  <option value="30_DAYS">30 ngày qua</option>
+                  <option value="THIS_MONTH">Tháng này</option>
+                  <option value="CUSTOM">Tùy chọn ngày</option>
+                </select>
+                <Calendar className="absolute left-3 top-2 text-gray-400" size={14} />
+              </div>
+              
+              {activityFilterTime === 'CUSTOM' && (
+                <input
+                  type="date"
+                  value={activityFilterCustomDate}
+                  onChange={(e) => setActivityFilterCustomDate(e.target.value)}
+                  className="w-full sm:w-36 px-3 py-1.5 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-1 focus:ring-primary/50 focus:border-primary transition"
+                />
+              )}
             </div>
 
             <div className="relative">

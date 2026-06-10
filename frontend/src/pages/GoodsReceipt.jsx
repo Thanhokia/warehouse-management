@@ -315,7 +315,7 @@ export default function GoodsReceipt() {
               className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-primary focus:outline-none bg-white"
             >
               <option value="">-- Chọn kho --</option>
-              {warehouses.filter(w => w.isActive !== false).map(w => (
+              {warehouses.filter(w => !w.name.includes('_deleted_') && w.isActive !== false).map(w => (
                 <option key={w.id} value={w.id}>{w.name}</option>
               ))}
             </select>
@@ -368,7 +368,7 @@ export default function GoodsReceipt() {
                         className="w-full border rounded px-2 py-2 focus:ring-2 focus:ring-primary focus:outline-none bg-white"
                       >
                         <option value="">-- Chọn sản phẩm --</option>
-                        {products.map(p => (
+                        {products.filter(p => !p.name.includes('_deleted_') && p.isActive !== false).map(p => (
                           <option key={p.id} value={p.id}>{p.code} - {p.name}</option>
                         ))}
                       </select>

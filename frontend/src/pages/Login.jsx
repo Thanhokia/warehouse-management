@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import authService from '../services/authService';
 import { useNavigate } from 'react-router-dom';
-import { Package, Lock, User, LogIn, AlertCircle } from 'lucide-react';
+import { Package, Lock, User, LogIn, AlertCircle, Eye, EyeOff } from 'lucide-react';
 
 export default function Login() {
   const [formData, setFormData] = useState({
@@ -13,6 +13,7 @@ export default function Login() {
   const [errors, setErrors] = useState({ username: '', password: '' });
   const [apiError, setApiError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const navigate = useNavigate();
 
@@ -112,8 +113,8 @@ export default function Login() {
           <div className="flex justify-center mb-3">
             <img src="/logo.png.jpg" alt="Zô Zô Quán" className="w-24 h-24 object-cover rounded-full border-4 border-white/20 shadow-lg bg-red-800" />
           </div>
-          <h1 className="text-2xl font-bold tracking-wide mt-2">Zô Zô Quán</h1>
-          <p className="text-blue-200 text-sm mt-1">Hệ thống Quản lý Kho</p>
+
+          <h2 className="text-white text-[13px] whitespace-nowrap font-medium mt-1">HỆ THỐNG QUẢN LÝ KHO NHÀ HÀNG</h2>
         </div>
 
         {/* Form Section */}
@@ -156,14 +157,22 @@ export default function Login() {
                 <input
                   id="password"
                   name="password"
-                  type="password"
+                  type={showPassword ? "text" : "password"}
                   value={formData.password}
                   onChange={handleChange}
                   placeholder="Nhập mật khẩu"
-                  className={`w-full pl-10 pr-4 py-3 rounded-xl border ${errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-primary focus:ring-primary/20'} focus:ring-2 focus:outline-none transition-all bg-gray-50 focus:bg-white`}
+                  className={`w-full pl-10 pr-12 py-3 rounded-xl border ${errors.password ? 'border-red-500 focus:ring-red-200' : 'border-gray-200 focus:border-primary focus:ring-primary/20'} focus:ring-2 focus:outline-none transition-all bg-gray-50 focus:bg-white`}
                   disabled={isLoading}
                 />
                 <Lock size={18} className={`absolute left-3.5 top-3.5 ${errors.password ? 'text-red-400' : 'text-gray-400'}`} />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-3.5 text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"
+                  tabIndex="-1"
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
               </div>
               {errors.password && <p className="text-red-500 text-xs mt-1.5 font-medium">{errors.password}</p>}
             </div>

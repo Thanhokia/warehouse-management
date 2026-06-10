@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X, Lock, KeyRound, Loader2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import authService from '../services/authService';
 import toast from 'react-hot-toast';
@@ -69,7 +70,7 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
     }
   };
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-[100] backdrop-blur-sm">
       <div className="bg-white text-gray-900 rounded-xl shadow-2xl w-full max-w-md border border-gray-100 overflow-hidden">
         <div className="flex justify-between items-center p-5 border-b bg-gray-50/50">
@@ -189,6 +190,7 @@ export default function ChangePasswordModal({ isOpen, onClose }) {
           </div>
         </form>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

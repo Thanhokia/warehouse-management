@@ -19,6 +19,7 @@ export default function Inventory() {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('');
   const [warehouseFilter, setWarehouseFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
 
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 10;
@@ -78,7 +79,17 @@ export default function Inventory() {
     const matchName = item.name.toLowerCase().includes(search.toLowerCase()) || item.code.toLowerCase().includes(search.toLowerCase());
     const matchCategory = categoryFilter ? item.categoryId.toString() === categoryFilter : true;
     const matchWarehouse = warehouseFilter ? item.warehouseId.toString() === warehouseFilter : true;
-    return matchName && matchCategory && matchWarehouse;
+    
+    let matchStatus = true;
+    if (statusFilter === 'HET_HANG') {
+      matchStatus = item.stock === 0;
+    } else if (statusFilter === 'THIEU_HANG') {
+      matchStatus = item.stock > 0 && item.stock <= item.minStock;
+    } else if (statusFilter === 'ON_DINH') {
+      matchStatus = item.stock > item.minStock;
+    }
+
+    return matchName && matchCategory && matchWarehouse && matchStatus;
   });
 
   // Tìm các sản phẩm sắp hết hàng (hoặc đã hết) trong list đang lọc
@@ -91,7 +102,7 @@ export default function Inventory() {
   // Reset to page 1 when filters change
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, categoryFilter, warehouseFilter]);
+  }, [search, categoryFilter, warehouseFilter, statusFilter]);
 
   const getCategoryName = (id) => categories.find(c => c.id === id)?.name || 'N/A';
   const getWarehouseName = (id) => warehouses.find(w => w.id === id)?.name || 'N/A';
@@ -185,7 +196,7 @@ export default function Inventory() {
                   className="w-full pl-8 pr-3 py-1.5 border rounded focus:ring-2 focus:ring-primary focus:outline-none text-sm appearance-none bg-white"
                 >
                   <option value="">Tất cả danh mục</option>
-                  {categories.map(c => (
+                  {categories.filter(c => !c.name.includes('_deleted_')).map(c => (
                     <option key={c.id} value={c.id}>{c.name}</option>
                   ))}
                 </select>
@@ -199,11 +210,25 @@ export default function Inventory() {
                   className="w-full pl-8 pr-3 py-1.5 border rounded focus:ring-2 focus:ring-primary focus:outline-none text-sm appearance-none bg-white"
                 >
                   <option value="">Tất cả kho hàng</option>
-                  {warehouses.map(w => (
+                  {warehouses.filter(w => !w.name.includes('_deleted_') && w.isActive !== false).map(w => (
                     <option key={w.id} value={w.id}>{w.name}</option>
                   ))}
                 </select>
                 <MapPin className="absolute left-2.5 top-2 text-gray-400" size={16} />
+              </div>
+
+              <div className="relative min-w-[150px]">
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full pl-8 pr-3 py-1.5 border rounded focus:ring-2 focus:ring-primary focus:outline-none text-sm appearance-none bg-white"
+                >
+                  <option value="">Tất cả trạng thái</option>
+                  <option value="HET_HANG">Hết hàng</option>
+                  <option value="THIEU_HANG">Thiếu hàng</option>
+                  <option value="ON_DINH">Ổn định</option>
+                </select>
+                <AlertTriangle className="absolute left-2.5 top-2 text-gray-400" size={16} />
               </div>
 
               <div className="flex gap-2 ml-auto lg:ml-0">

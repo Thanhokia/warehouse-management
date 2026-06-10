@@ -10,6 +10,7 @@ import com.example.backend.inventory.entity.*;
 import com.example.backend.inventory.repository.InventoryCheckDetailRepository;
 import com.example.backend.inventory.repository.InventoryCheckRepository;
 import com.example.backend.inventory.repository.ProductRepository;
+import com.example.backend.inventory.repository.StockItemRepository;
 import com.example.backend.inventory.repository.UserRepository;
 import com.example.backend.inventory.repository.WarehouseRepository;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class InventoryCheckService {
     private final UserRepository userRepository;
     private final StockService stockService;
     private final ActivityLogService activityLogService;
+    private final StockItemRepository stockItemRepository;
 
     @Transactional
     public InventoryCheckResponse createCheck(InventoryCheckRequest request, String username) {
@@ -63,12 +65,18 @@ public class InventoryCheckService {
             Product product = productRepository.findById(detailReq.getProductId())
                     .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
-            BigDecimal difference = detailReq.getActualQuantity().subtract(detailReq.getOriginalQuantity());
+            BigDecimal originalQuantity = BigDecimal.ZERO;
+            var stockOpt = stockItemRepository.findByWarehouseIdAndProductId(warehouse.getId(), product.getId());
+            if (stockOpt.isPresent()) {
+                originalQuantity = stockOpt.get().getQuantity();
+            }
+
+            BigDecimal difference = detailReq.getActualQuantity().subtract(originalQuantity);
 
             InventoryCheckDetail detail = InventoryCheckDetail.builder()
                     .inventoryCheck(savedCheck)
                     .product(product)
-                    .originalQuantity(detailReq.getOriginalQuantity())
+                    .originalQuantity(originalQuantity)
                     .actualQuantity(detailReq.getActualQuantity())
                     .difference(difference)
                     .reason(detailReq.getReason())
@@ -95,24 +103,18 @@ public class InventoryCheckService {
         }
 
         // Gather all differences != 0
-        List<StockAdjustRequest> adjustRequests = new ArrayList<>();
         boolean hasDifference = false;
 
         for (InventoryCheckDetail detail : check.getDetails()) {
             if (detail.getDifference().compareTo(BigDecimal.ZERO) != 0) {
                 hasDifference = true;
-                adjustRequests.add(new StockAdjustRequest(
-                        detail.getProduct().getId(),
-                        check.getWarehouse().getId(),
-                        detail.getActualQuantity(),
-                        detail.getReason()
-                ));
+                break;
             }
         }
 
         if (hasDifference) {
-            // Apply stock adjustments
-            stockService.adjustStockBatch(adjustRequests, username);
+            // Apply stock adjustments based on differences to avoid race condition
+            stockService.applyInventoryCheckDifferences(check.getDetails(), check.getWarehouse().getId(), username);
             activityLogService.logActionWithUser(username, "đã duyệt", "Thành công", 
                 "phiếu kiểm kê: " + check.getCode() + " (Có điều chỉnh chênh lệch)");
         } else {

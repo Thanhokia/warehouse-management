@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 import java.math.BigDecimal;
 import com.example.backend.inventory.dto.request.StockAdjustRequest;
 import com.example.backend.inventory.entity.ActivityLog;
+import com.example.backend.inventory.entity.InventoryCheckDetail;
+import com.example.backend.inventory.entity.Warehouse;
 import com.example.backend.inventory.repository.ActivityLogRepository;
 
 @Service
@@ -102,6 +104,52 @@ public class StockService {
                                 newQuantity.toString(),
                                 difference.toString(),
                                 request.getReason()))
+                        .build();
+                activityLogRepository.save(log);
+            }
+        }
+    }
+
+    @Transactional
+    public void applyInventoryCheckDifferences(List<InventoryCheckDetail> details, Long warehouseId, String username) {
+        for (InventoryCheckDetail detail : details) {
+            BigDecimal difference = detail.getDifference();
+            if (difference != null && difference.compareTo(BigDecimal.ZERO) != 0) {
+                StockItem item = stockItemRepository
+                        .findByWarehouseIdAndProductId(warehouseId, detail.getProduct().getId())
+                        .orElseGet(() -> {
+                            Warehouse warehouse = warehouseRepository.findById(warehouseId)
+                                .orElseThrow(() -> new ResourceNotFoundException("Warehouse not found with id: " + warehouseId));
+                            return StockItem.builder()
+                                    .warehouse(warehouse)
+                                    .product(detail.getProduct())
+                                    .quantity(BigDecimal.ZERO)
+                                    .build();
+                        });
+
+                BigDecimal oldQuantity = item.getQuantity() != null ? item.getQuantity() : BigDecimal.ZERO;
+                BigDecimal newQuantity = oldQuantity.add(difference);
+                
+                // Prevent negative stock
+                if (newQuantity.compareTo(BigDecimal.ZERO) < 0) {
+                    newQuantity = BigDecimal.ZERO;
+                    difference = newQuantity.subtract(oldQuantity);
+                }
+
+                item.setQuantity(newQuantity);
+                stockItemRepository.save(item);
+
+                ActivityLog log = ActivityLog.builder()
+                        .username(username)
+                        .action("đã duyệt kiểm kê")
+                        .status("Thành công")
+                        .detail(String.format("Điều chỉnh tồn kho sản phẩm [%s] tại kho [%s]. Số lượng: %s -> %s (Chênh lệch: %s). Lý do: %s",
+                                detail.getProduct().getCode(),
+                                item.getWarehouse().getName(),
+                                oldQuantity.toString(),
+                                newQuantity.toString(),
+                                difference.toString(),
+                                detail.getReason()))
                         .build();
                 activityLogRepository.save(log);
             }

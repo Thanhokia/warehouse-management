@@ -257,7 +257,7 @@ export default function Products() {
               className="w-full pl-10 pr-4 py-2 border rounded focus:ring-2 focus:ring-primary focus:outline-none appearance-none"
             >
               <option value="">Tất cả danh mục</option>
-              {categories.filter(c => c.isActive !== false).map(c => (
+              {categories.filter(c => !c.name.includes('_deleted_') && c.isActive !== false).map(c => (
                 <option key={c.id} value={c.id}>{c.name}</option>
               ))}
             </select>
@@ -430,7 +430,7 @@ export default function Products() {
                       className="w-full border rounded px-3 py-2 bg-white"
                     >
                       <option value="">Chọn danh mục</option>
-                      {categories.filter(c => c.isActive !== false).map(c => (
+                      {categories.filter(c => !c.name.includes('_deleted_') && c.isActive !== false).map(c => (
                         <option key={c.id} value={c.id}>{c.name}</option>
                       ))}
                     </select>

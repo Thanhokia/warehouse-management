@@ -398,7 +398,7 @@ export default function GoodsIssue() {
               className="w-full border rounded px-3 py-2 focus:ring-2 focus:ring-orange-400 focus:outline-none bg-white"
             >
               <option value="">-- Chọn kho --</option>
-              {warehouses.filter(w => w.isActive !== false).map(w => (
+              {warehouses.filter(w => !w.name.includes('_deleted_') && w.isActive !== false).map(w => (
                 <option key={w.id} value={w.id}>{w.name}</option>
               ))}
             </select>
@@ -452,7 +452,7 @@ export default function GoodsIssue() {
                         className={`w-full border rounded px-2 py-2 focus:ring-2 focus:outline-none bg-white ${showWarning ? 'border-red-300 focus:ring-red-400' : 'focus:ring-orange-400'}`}
                       >
                         <option value="">-- Chọn sản phẩm --</option>
-                        {products.map(p => {
+                        {products.filter(p => !p.name.includes('_deleted_') && p.isActive !== false).map(p => {
                           const s = issueData.warehouseId ? (warehouseStock[p.id] || 0) : null;
                           return (
                             <option key={p.id} value={p.id} disabled={s === 0}>
