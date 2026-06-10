@@ -7,7 +7,7 @@ const dashboardService = {
   getOverview: async () => {
     try {
       const response = await axiosClient.get('/dashboard/overview');
-      return response;
+      return response.data;
     } catch (error) {
       console.error("Lỗi khi tải dữ liệu tổng quan:", error);
       throw error;
