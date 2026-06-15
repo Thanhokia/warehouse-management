@@ -87,7 +87,7 @@ public class InventoryCheckService {
         savedCheck.setDetails(details);
         inventoryCheckDetailRepository.saveAll(details);
 
-        activityLogService.logActionWithUser(username, "đã tạo", "Thông tin", 
+        activityLogService.logActionWithUser(username, "đã tạo", "Thông tin",
                 "phiếu kiểm kê kho: " + code + " tại " + warehouse.getName());
 
         return toResponse(savedCheck);
@@ -115,11 +115,11 @@ public class InventoryCheckService {
         if (hasDifference) {
             // Apply stock adjustments based on differences to avoid race condition
             stockService.applyInventoryCheckDifferences(check.getDetails(), check.getWarehouse().getId(), username);
-            activityLogService.logActionWithUser(username, "đã duyệt", "Thành công", 
-                "phiếu kiểm kê: " + check.getCode() + " (Có điều chỉnh chênh lệch)");
+            activityLogService.logActionWithUser(username, "đã duyệt", "Thành công",
+                    "phiếu kiểm kê: " + check.getCode() + " (Có điều chỉnh chênh lệch)");
         } else {
-            activityLogService.logActionWithUser(username, "đã duyệt", "Thành công", 
-                "phiếu kiểm kê: " + check.getCode() + " (Số lượng thực tế khớp 100%)");
+            activityLogService.logActionWithUser(username, "đã duyệt", "Thành công",
+                    "phiếu kiểm kê: " + check.getCode() + " (Số lượng thực tế khớp 100%)");
         }
 
         check.setStatus(InventoryCheck.CheckStatus.COMPLETED);
@@ -140,7 +140,7 @@ public class InventoryCheckService {
         check.setStatus(InventoryCheck.CheckStatus.REJECTED);
         inventoryCheckRepository.save(check);
 
-        activityLogService.logActionWithUser(username, "đã từ chối", "Cảnh báo", 
+        activityLogService.logActionWithUser(username, "đã từ chối", "Cảnh báo",
                 "phiếu kiểm kê: " + check.getCode());
 
         return toResponse(check);
@@ -162,18 +162,19 @@ public class InventoryCheckService {
             statusStr = "Đã từ chối";
         }
 
-        List<InventoryCheckDetailResponse> detailResponses = check.getDetails() != null ? 
-            check.getDetails().stream().map(d -> InventoryCheckDetailResponse.builder()
-                .id(d.getId())
-                .productId(d.getProduct().getId())
-                .productCode(d.getProduct().getCode())
-                .productName(d.getProduct().getName())
-                .productUnit(d.getProduct().getUnit())
-                .originalQuantity(d.getOriginalQuantity())
-                .actualQuantity(d.getActualQuantity())
-                .difference(d.getDifference())
-                .reason(d.getReason())
-                .build()).collect(Collectors.toList()) : new ArrayList<>();
+        List<InventoryCheckDetailResponse> detailResponses = check.getDetails() != null ? check.getDetails().stream()
+                .map(d -> InventoryCheckDetailResponse.builder()
+                        .id(d.getId())
+                        .productId(d.getProduct().getId())
+                        .productCode(d.getProduct().getCode())
+                        .productName(d.getProduct().getName())
+                        .productUnit(d.getProduct().getUnit())
+                        .originalQuantity(d.getOriginalQuantity())
+                        .actualQuantity(d.getActualQuantity())
+                        .difference(d.getDifference())
+                        .reason(d.getReason())
+                        .build())
+                .collect(Collectors.toList()) : new ArrayList<>();
 
         return InventoryCheckResponse.builder()
                 .id(check.getId())

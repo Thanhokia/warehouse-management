@@ -8,5 +8,5 @@ import java.util.List;
 
 @Repository
 public interface ActivityLogRepository extends JpaRepository<ActivityLog, Long> {
-    List<ActivityLog> findTop100ByOrderByCreatedAtDesc();
+    List<ActivityLog> findAllByOrderByCreatedAtDesc();
 }
