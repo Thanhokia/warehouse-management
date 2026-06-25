@@ -632,6 +632,7 @@ export default function Reports() {
             <thead className="bg-gray-50 text-gray-500 border-b">
               <tr>
                 <th className="py-3 px-4 font-medium">Mã SP</th>
+                <th className="py-3 px-4 font-medium">Tên sản phẩm</th>
                 <th className="py-3 px-4 font-medium text-right">Tồn HT</th>
                 <th className="py-3 px-4 font-medium text-right">Tối thiểu</th>
               </tr>
@@ -639,7 +640,8 @@ export default function Reports() {
             <tbody>
               {lowStockItems.length > 0 ? lowStockItems.map(item => (
                 <tr key={item.id} className="border-b last:border-b-0 hover:bg-red-50/30">
-                  <td className="py-3 px-4 font-medium text-gray-700 truncate max-w-[100px]" title={item.productName || item.name}>{item.productCode || item.code}</td>
+                  <td className="py-3 px-4 font-medium text-gray-700 truncate max-w-[80px]" title={item.productCode || item.code}>{item.productCode || item.code}</td>
+                  <td className="py-3 px-4 truncate max-w-[150px]" title={item.productName || item.name}>{item.productName || item.name}</td>
                   <td className="py-3 px-4 text-right font-bold text-rose-600">{item.quantity}</td>
                   <td className="py-3 px-4 text-right text-gray-500">{item.minStockLevel || item.minStock || 0}</td>
                 </tr>
